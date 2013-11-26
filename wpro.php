@@ -691,7 +691,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 				$id = (int) $field['id'];
 				$file_to_upload = $entry[$id];
 				if($file_to_upload) {
-					$url = $this->url_normalizer($entry[$id]);
+					$url = $entry[$id];
 					$file_to_upload = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $file_to_upload);
 					$mime = wp_check_filetype($file_to_upload);
 
