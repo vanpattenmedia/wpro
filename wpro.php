@@ -289,9 +289,8 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 			$this->backend = new WordpressReadOnlyS3();
 		}
 
-		$this->tempdir = sys_get_temp_dir();
+		$this->tempdir = wpro_get_option('wpro-tempdir');
 		if (substr($this->tempdir, -1) != '/') $this->tempdir = $this->tempdir . '/';
-
 	}
 
 	function is_trusted() {
@@ -314,6 +313,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	function admin_init() {
 		add_site_option('wpro-service', '');
 		add_site_option('wpro-folder', '');
+		add_site_option('wpro-tempdir', sys_get_temp_dir() );
 		add_site_option('wpro-aws-key', '');
 		add_site_option('wpro-aws-secret', '');
 		add_site_option('wpro-aws-bucket', '');
@@ -342,7 +342,20 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		// This is because the Settings API has no way of storing network wide options in multisite installs.
 		if (!$this->is_trusted()) return false;
 		if ($_POST['action'] != 'wpro_settings_POST') return false;
-		foreach (array('wpro-service', 'wpro-folder', 'wpro-aws-key', 'wpro-aws-secret', 'wpro-aws-bucket', 'wpro-aws-virthost', 'wpro-aws-endpoint', 'wpro-ftp-server', 'wpro-ftp-user', 'wpro-ftp-password', 'wpro-ftp-pasvmode') as $allowedPostData) {
+		foreach (array(
+			'wpro-service', 
+			'wpro-folder', 
+			'wpro-tempdir', 
+			'wpro-aws-key', 
+			'wpro-aws-secret', 
+			'wpro-aws-bucket', 
+			'wpro-aws-virthost', 
+			'wpro-aws-endpoint', 
+			'wpro-ftp-server', 
+			'wpro-ftp-user', 
+			'wpro-ftp-password', 
+			'wpro-ftp-pasvmode'
+		) as $allowedPostData) {
 			$data = false;
 			if (isset($_POST[$allowedPostData])) $data = stripslashes($_POST[$allowedPostData]);
 			update_site_option($allowedPostData, $data);
@@ -400,6 +413,10 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 						<tr>
 							<th><label for="wpro-folder">Prepend all paths with folder</th>
 							<td><input name="wpro-folder" id="wpro-folder" type="text" value="<?php echo(wpro_get_option('wpro-folder')); ?>" class="regular-text code" /></td>
+						</tr>
+						<tr>
+							<th><label for="wpro-tempdir">Temp directory (must be writable by web server)</th>
+							<td><input name="wpro-tempdir" id="wpro-tempdir" type="text" value="<?php echo(wpro_get_option('wpro-tempdir')); ?>" class="regular-text code" /></td>
 						</tr>
 					</table>
 					<div class="wpro-service-div" id="wpro-service-s3-div" <?php if ($wproService == 'ftp') echo ('style="display:none"'); ?> >
@@ -516,6 +533,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		$data['path'] = $this->upload_basedir . $data['subdir'];
 		$data['url'] = $data['baseurl'] . $data['subdir'];
 
+		
 //		$this->debug('-> RETURNS = ');
 //		$this->debug(print_r($data, true));
 
@@ -685,7 +703,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		$this->debug('-> $this->temporaryLocalData = ');
 		$this->debug(print_r($this->temporaryLocalData, true));
 
-		$tempdir = sys_get_temp_dir();
+		$tempdir = wpro_get_option('wpro-tempdir');
 		if (substr($tempdir, -1) == '/') $tempdir = substr($tempdir, 0, -1);
 
 		foreach ($this->temporaryLocalData as $file) {
