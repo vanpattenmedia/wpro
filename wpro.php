@@ -699,7 +699,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	function shutdown() {
 		$this->debug('WordpressReadOnly::shutdown()');
 
-		$this->temporaryLocalData = array_merge($this->temporaryLocalData, $this->backend->temporaryLocalData,  $this->upload_basedir);
+		$this->temporaryLocalData = array_merge($this->temporaryLocalData, $this->backend->temporaryLocalData,  array($this->upload_basedir));
 
 		$this->debug('-> $this->temporaryLocalData = ');
 		$this->debug(print_r($this->temporaryLocalData, true));
