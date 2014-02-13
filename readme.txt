@@ -4,7 +4,7 @@
 * Tags: wordpress, amazon, s3, readonly
 * Requires at least: 3.3
 * Tested up to: 3.3.1
-* Stable tag: 1.0
+* Stable tag: 1.2
 * License: GPLv2
 
 Plugin for running your Wordpress site without Write Access to the
@@ -115,6 +115,10 @@ If we meet some day, and you think this stuff is worth it, you may buy
 me a beer in return. (GPLv2 still applies.)
 
 == Changelog ==
+
+= 1.2 =
+*   Added temp directory configuration option.
+*   Fixed issue with /tmp directory filling up with empty folders. (Issue #3)
 
 = 1.1 =
 
