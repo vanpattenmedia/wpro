@@ -533,7 +533,8 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		$data['path'] = $this->upload_basedir . $data['subdir'];
 		$data['url'] = $data['baseurl'] . $data['subdir'];
 
-		
+		$this->removeTemporaryLocalData($data['path']);
+
 //		$this->debug('-> RETURNS = ');
 //		$this->debug(print_r($data, true));
 
@@ -698,7 +699,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	function shutdown() {
 		$this->debug('WordpressReadOnly::shutdown()');
 
-		$this->temporaryLocalData = array_merge($this->temporaryLocalData, $this->backend->temporaryLocalData);
+		$this->temporaryLocalData = array_merge($this->temporaryLocalData, $this->backend->temporaryLocalData,  $this->upload_basedir);
 
 		$this->debug('-> $this->temporaryLocalData = ');
 		$this->debug(print_r($this->temporaryLocalData, true));
