@@ -1,0 +1,11 @@
+{
+    "name": "istrategylabs/wpro",
+    "description": "Wordpress Read-Only",
+    "homepage": "http://github.com/istrategylabs/wpro",
+    "type": "wordpress-plugin",
+    "extra": {
+        "branch-alias": {
+            "dev-composer": "1.0.x-dev"
+        }
+    }
+}
