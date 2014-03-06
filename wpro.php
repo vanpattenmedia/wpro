@@ -277,6 +277,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		add_filter('wp_generate_attachment_metadata', array($this, 'generate_attachment_metadata')); // We use this filter to store resized versions of the images.
 		add_filter('wp_update_attachment_metadata', array($this, 'update_attachment_metadata')); // We use this filter to store resized versions of the images.
 		add_filter('load_image_to_edit_path', array($this, 'load_image_to_edit_path')); // This filter downloads the image to our local temporary directory, prior to editing the image.
+		add_filter('get_attached_file', array($this, 'load_image_to_local_path'), 10, 2); // This filter downloads the image to our local temporary directory, prior to using the image.
 		add_filter('wp_save_image_file', array($this, 'save_image_file')); // Store image file.
 		add_filter('wp_save_image_editor_file', array($this, 'save_image_file'), 10, 5);
 		add_filter('wp_upload_bits', array($this, 'upload_bits')); // On XMLRPC uploads, files arrives as strings, which we are handling in this filter.
@@ -580,6 +581,42 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	function load_image_to_edit_path($filepath) {
 
 		$this->debug('WordpressReadOnly::load_image_to_edit_path("' . $filepath . '");');
+
+		if (substr($filepath, 0, 7) == 'http://') {
+
+			$ending = '';
+			if (preg_match('/\.([^\.\/]+)$/', $filepath, $regs)) $ending = '.' . $regs[1];
+
+			$tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
+			while (file_exists($tmpfile)) $tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
+
+			$filepath = $this->url_normalizer($filepath);
+
+			$this->debug('-> Loading file from: ' . $filepath);
+			$this->debug('-> Storing file at: ' . $tmpfile);
+
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $filepath);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_AUTOREFERER, true);
+
+			$fh = fopen($tmpfile, 'w');
+			fwrite($fh, curl_exec_follow($ch));
+			fclose($fh);
+
+			$this->removeTemporaryLocalData($tmpfile);
+
+			return $tmpfile;
+
+		}
+		return $filepath;
+	}
+	
+	function load_image_to_local_path($filepath, $attachment_id) {
+
+		$this->debug('WordpressReadOnly::load_image_to_local_path("' . $filepath . '");');
+
+		$filepath = apply_filters( 'load_image_to_edit_attachmenturl', wp_get_attachment_url( $attachment_id ), $attachment_id, 'full' );
 
 		if (substr($filepath, 0, 7) == 'http://') {
 
