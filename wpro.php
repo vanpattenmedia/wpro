@@ -616,9 +616,9 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 		$this->debug('WordpressReadOnly::load_image_to_local_path("' . $filepath . '");');
 
-		$filepath = apply_filters( 'load_image_to_edit_attachmenturl', wp_get_attachment_url( $attachment_id ), $attachment_id, 'full' );
+		$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', wp_get_attachment_url( $attachment_id ), $attachment_id, 'full' );
 
-		if (substr($filepath, 0, 7) == 'http://') {
+		if (substr($fileurl, 0, 7) == 'http://') {
 
 			$ending = '';
 			if (preg_match('/\.([^\.\/]+)$/', $filepath, $regs)) $ending = '.' . $regs[1];
@@ -626,13 +626,13 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 			$tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
 			while (file_exists($tmpfile)) $tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
 
-			$filepath = $this->url_normalizer($filepath);
+			$fileurl = $this->url_normalizer($fileurl);
 
-			$this->debug('-> Loading file from: ' . $filepath);
+			$this->debug('-> Loading file from: ' . $fileurl);
 			$this->debug('-> Storing file at: ' . $tmpfile);
 
 			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $filepath);
+			curl_setopt($ch, CURLOPT_URL, $fileurl);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_AUTOREFERER, true);
 
