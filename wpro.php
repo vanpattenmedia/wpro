@@ -526,6 +526,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	}
 
 	function generate_attachment_metadata($data) {
+		$this->debug('WordpressReadOnly::generate_attachment_metadata();');
 		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
 
 		$upload_dir = wp_upload_dir();
@@ -553,30 +554,31 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		return $data;
 	}
 
-        function update_attachment_metadata($data) {
-                if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
-                $upload_dir = wp_upload_dir();
-                $filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
-                foreach ($data['sizes'] as $size => $sizedata) {
-                        $file = '/tmp/' . $sizedata['file'];
+    function update_attachment_metadata($data) {
+		$this->debug('WordpressReadOnly::update_attachment_metadata();');
+        if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
+        $upload_dir = wp_upload_dir();
+        $filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
+        foreach ($data['sizes'] as $size => $sizedata) {
+            $file = $filepath . $sizedata['file'];
 			$url = $upload_dir['baseurl'] . substr($filepath, strlen($upload_dir['basedir'])) . $sizedata['file'];
-                        $mime = 'application/octet-stream';
-                        switch(substr($file, -4)) {
-                                case '.gif':
-                                        $mime = 'image/gif';
-                                        break;
-                                case '.jpg':
-                                        $mime = 'image/jpeg';
-                                        break;
-                                case '.png':
-                                        $mime = 'image/png';
-                                        break;
-                        }
+            $mime = 'application/octet-stream';
+            switch(substr($file, -4)) {
+                case '.gif':
+                    $mime = 'image/gif';
+                    break;
+                case '.jpg':
+                    $mime = 'image/jpeg';
+                    break;
+                case '.png':
+                    $mime = 'image/png';
+                    break;
+            }
 
-                        $this->backend->upload($file, $url, $mime);
-                }
-                return $data;
+            $this->backend->upload($file, $url, $mime);
         }
+        return $data;
+    }
 
 	function load_image_to_edit_path($filepath) {
 
@@ -611,7 +613,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		}
 		return $filepath;
 	}
-	
+
 	function load_image_to_local_path($filepath, $attachment_id) {
 
 		$this->debug('WordpressReadOnly::load_image_to_local_path("' . $filepath . '");');
