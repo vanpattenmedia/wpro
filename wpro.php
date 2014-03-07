@@ -10,7 +10,7 @@ License: GPLv2
  */
 
 // define('WPRO_DEBUG', true);
-s
+
 // PHP < 5.2.1 compatibility
 if ( !function_exists('sys_get_temp_dir')) {
 	function sys_get_temp_dir() {
