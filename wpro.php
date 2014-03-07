@@ -561,7 +561,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
         $filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
         foreach ($data['sizes'] as $size => $sizedata) {
             $file = $filepath . $sizedata['file'];
-			$url = $upload_dir['baseurl'] . substr($filepath, strlen($upload_dir['basedir'])) . $sizedata['file'];
+			$url = $upload_dir['baseurl'] . substr($file, strlen($upload_dir['basedir']));
             $mime = 'application/octet-stream';
             switch(substr($file, -4)) {
                 case '.gif':
