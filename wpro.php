@@ -620,29 +620,23 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 		if (substr($fileurl, 0, 7) == 'http://') {
 
-			$ending = '';
-			if (preg_match('/\.([^\.\/]+)$/', $filepath, $regs)) $ending = '.' . $regs[1];
-
-			$tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
-			while (file_exists($tmpfile)) $tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
-
 			$fileurl = $this->url_normalizer($fileurl);
 
 			$this->debug('-> Loading file from: ' . $fileurl);
-			$this->debug('-> Storing file at: ' . $tmpfile);
+			$this->debug('-> Storing file at: ' . $filepath);
 
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $fileurl);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_AUTOREFERER, true);
 
-			$fh = fopen($tmpfile, 'w');
+			$fh = fopen($filepath, 'w');
 			fwrite($fh, curl_exec_follow($ch));
 			fclose($fh);
 
-			$this->removeTemporaryLocalData($tmpfile);
+			$this->removeTemporaryLocalData($filepath);
 
-			return $tmpfile;
+			return $filepath;
 
 		}
 		return $filepath;
