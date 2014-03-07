@@ -10,7 +10,7 @@ License: GPLv2
  */
 
 // define('WPRO_DEBUG', true);
-
+s
 // PHP < 5.2.1 compatibility
 if ( !function_exists('sys_get_temp_dir')) {
 	function sys_get_temp_dir() {
@@ -650,24 +650,21 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 
 		if (substr($filename, 0, strlen($this->tempdir)) != $this->tempdir) return false;
-		$filename = substr($filename, strlen($this->tempdir));
-		if (!preg_match('/^wpro[0-9]+(\/.+)$/', $filename, $regs)) return false;
+		$tmpfile = substr($filename, strlen($this->tempdir));
+		if (!preg_match('/^wpro[0-9]+(\/.+)$/', $tmpfile, $regs)) return false;
 
-		$filename = $regs[1];
+		$tmpfile = $regs[1];
 
-		$extension = str_replace("/", ".", $mime_type);
-		$tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $extension;
-		while (file_exists($tmpfile)) $tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $extension;
-		$this->debug('-> Storing image as temporary file: ' . $tmpfile);
-		$image->save($tmpfile, $mime_type);
+		$this->debug('-> Storing image as temporary file: ' . $filename);
+		$image->save($filename, $mime_type);
 
 		$upload = wp_upload_dir();
 		$url = $upload['baseurl'];
 		if (substr($url, -1) != '/') $url .= '/';
-		while (substr($filename, 0, 1) == '/') $filename = substr($filename, 1);
-		$url .= $filename;
+		while (substr($tmpfile, 0, 1) == '/') $tmpfile = substr($tmpfile, 1);
+		$url .= $tmpfile;
 
-		return $this->backend->upload($tmpfile, $this->url_normalizer($url), $mime_type);
+		return $this->backend->upload($filename, $this->url_normalizer($url), $mime_type);
 
 	}
 
