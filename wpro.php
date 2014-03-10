@@ -317,6 +317,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		add_site_option('wpro-aws-key', '');
 		add_site_option('wpro-aws-secret', '');
 		add_site_option('wpro-aws-bucket', '');
+		add_site_option('wpro-aws-cloudfront', '');
 		add_site_option('wpro-aws-virthost', '');
 		add_site_option('wpro-aws-endpoint', '');
 		add_site_option('wpro-ftp-server', '');
@@ -342,7 +343,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		// This is because the Settings API has no way of storing network wide options in multisite installs.
 		if (!$this->is_trusted()) return false;
 		if ($_POST['action'] != 'wpro_settings_POST') return false;
-		foreach (array('wpro-service', 'wpro-folder', 'wpro-aws-key', 'wpro-aws-secret', 'wpro-aws-bucket', 'wpro-aws-virthost', 'wpro-aws-endpoint', 'wpro-ftp-server', 'wpro-ftp-user', 'wpro-ftp-password', 'wpro-ftp-pasvmode') as $allowedPostData) {
+		foreach (array('wpro-service', 'wpro-folder', 'wpro-aws-key', 'wpro-aws-secret', 'wpro-aws-bucket', 'wpro-aws-cloudfront', 'wpro-aws-virthost', 'wpro-aws-endpoint', 'wpro-ftp-server', 'wpro-ftp-user', 'wpro-ftp-password', 'wpro-ftp-pasvmode') as $allowedPostData) {
 			$data = false;
 			if (isset($_POST[$allowedPostData])) $data = stripslashes($_POST[$allowedPostData]);
 			update_site_option($allowedPostData, $data);
@@ -418,6 +419,12 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 								<td>
 									<input name="wpro-aws-bucket" id="wpro-aws-bucket" type="text" value="<?php echo wpro_get_option('wpro-aws-bucket'); ?>" class="regular-text code" /><br />
 									<input name="wpro-aws-virthost" id="wpro-aws-virthost" type="checkbox" value="1"  <?php if (wpro_get_option('wpro-aws-virthost')) echo('checked="checked"'); ?> /> Virtual hosting is enabled for this bucket.
+								</td>
+							</tr>
+							<tr>
+								<th><label for="wpro-aws-cloudfront">CloudFront Distribution Domain</label></th> 
+								<td>
+									<input name="wpro-aws-cloudfront" id="wpro-aws-cloudfront" type="text" value="<?php echo wpro_get_option('wpro-aws-cloudfront'); ?>" class="regular-text code" />
 								</td>
 							</tr>
 							<tr>
@@ -507,7 +514,9 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 			$data['baseurl'] = 'http://' . trim(str_replace('//', '/', trim(wpro_get_option('wpro-ftp-webroot'), '/') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
 			break;
 		default:
-			if (wpro_get_option('wpro-aws-virthost')) {
+			if (wpro_get_option('wpro-aws-cloudfront')) {
+				$data['baseurl'] = 'http://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-cloudfront') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+			} elseif (wpro_get_option('wpro-aws-virthost')) {
 				$data['baseurl'] = 'http://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
 			} else {
 				$data['baseurl'] = 'http://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro_get_option('wpro-folder'))), '/');
