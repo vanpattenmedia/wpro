@@ -193,7 +193,7 @@ class WordpressReadOnlyS3 extends WordpressReadOnlyBackend {
 		$fout = fsockopen($this->endpoint, 80, $errno, $errstr, 30);
 		if (!$fout) return false;
 		$datetime = gmdate('r');
-		$string2sign = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . $this->bucket . "/" . $url;
+		$string2sign = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . $url;
 
 		$this->debug('STRING TO SIGN:');
 		$this->debug($string2sign);
@@ -203,7 +203,7 @@ class WordpressReadOnlyS3 extends WordpressReadOnlyBackend {
 
 		// Todo: Make this work with php cURL instead of fsockopen/etc..
 
-		$query = "PUT /" . $this->bucket . "/" . $url . " HTTP/1.1\n";
+		$query = "PUT /" . $url . " HTTP/1.1\n";
 		$query .= "Host: " . $this->endpoint . "\n";
 		$query .= "x-amz-acl: public-read\n";
 		$query .= "Connection: keep-alive\n";
@@ -510,7 +510,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 			if (wpro_get_option('wpro-aws-virthost')) {
 				$data['baseurl'] = 'http://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
 			} else {
-				$data['baseurl'] = 'http://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro_get_option('wpro-folder'))), '/');
+				$data['baseurl'] = 'http://s3.amazonaws.com/' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') .'/'. trim(wpro_get_option('wpro-folder'))), '/');
 			}
 		}
 		$data['path'] = $this->upload_basedir . $data['subdir'];
