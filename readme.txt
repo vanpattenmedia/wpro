@@ -112,7 +112,7 @@ http://www.gnu.org/licenses/gpl-2.0.html
 = Do you like beer? =
 
 If we meet some day, and you think this stuff is worth it, you may buy
-me a beer in return. (GPLv2 still applies.)
+me some wine (due to my gluten free diet) in return. (GPLv2 still applies.)
 
 == Changelog ==
 
