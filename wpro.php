@@ -181,8 +181,8 @@ class WordpressReadOnlyS3 extends WordpressReadOnlyBackend {
 	function upload($file, $fullurl, $mime) {
 		$this->debug('WordpressReadOnlyS3::upload("' . $file . '", "' . $fullurl . '", "' . $mime . '");');
 		$fullurl = $this->url_normalizer($fullurl);
-		if (!preg_match('/^http:\/\/([^\/]+)\/(.*)$/', $fullurl, $regs)) return false;
-		$url = $regs[2];
+		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $fullurl, $regs)) return false;
+		$url = $regs[3];
 
 		if (!file_exists($file)) return false;
 		$this->removeTemporaryLocalData($file);
@@ -325,8 +325,10 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		add_site_option('wpro-aws-key', '');
 		add_site_option('wpro-aws-secret', '');
 		add_site_option('wpro-aws-bucket', '');
+		add_site_option('wpro-aws-cloudfront', '');
 		add_site_option('wpro-aws-virthost', '');
 		add_site_option('wpro-aws-endpoint', '');
+		add_site_option('wpro-aws-ssl', '');
 		add_site_option('wpro-ftp-server', '');
 		add_site_option('wpro-ftp-user', '');
 		add_site_option('wpro-ftp-password', '');
@@ -350,7 +352,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		// This is because the Settings API has no way of storing network wide options in multisite installs.
 		if (!$this->is_trusted()) return false;
 		if ($_POST['action'] != 'wpro_settings_POST') return false;
-		foreach (array('wpro-service', 'wpro-folder', 'wpro-aws-key', 'wpro-aws-secret', 'wpro-aws-bucket', 'wpro-aws-virthost', 'wpro-aws-endpoint', 'wpro-ftp-server', 'wpro-ftp-user', 'wpro-ftp-password', 'wpro-ftp-pasvmode') as $allowedPostData) {
+		foreach (array('wpro-service', 'wpro-folder', 'wpro-aws-key', 'wpro-aws-secret', 'wpro-aws-bucket', 'wpro-aws-cloudfront', 'wpro-aws-virthost', 'wpro-aws-endpoint', 'wpro-ftp-server', 'wpro-ftp-user', 'wpro-ftp-password', 'wpro-ftp-pasvmode', 'wpro-aws-ssl') as $allowedPostData) {
 			$data = false;
 			if (isset($_POST[$allowedPostData])) $data = stripslashes($_POST[$allowedPostData]);
 			update_site_option($allowedPostData, $data);
@@ -429,7 +431,19 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 								</td>
 							</tr>
 							<tr>
-								<th><label for="wpro-aws-endpoint">Bucket AWS Region</label></th>
+								<th><label for="wpro-aws-cloudfront">CloudFront Distribution Domain</label></th> 
+								<td>
+									<input name="wpro-aws-cloudfront" id="wpro-aws-cloudfront" type="text" value="<?php echo wpro_get_option('wpro-aws-cloudfront'); ?>" class="regular-text code" />
+								</td>
+							</tr>
+							<tr>
+								<th><label for="wpro-aws-ssl">AWS SSL</label></th>
+								<td>
+									<input name="wpro-aws-ssl" id="wpro-aws-ssl" type="checkbox" value="1"  <?php if (wpro_get_option('wpro-aws-ssl')) echo('checked="checked"'); ?> />
+								</td>
+							</tr>
+							<tr>
+								<th><label for="wpro-aws-endpoint">Bucket AWS Region</label></th> 
 								<td>
 									<select name="wpro-aws-endpoint" id="wpro-aws-endpoint">
 										<?php
@@ -510,15 +524,22 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 			while (is_dir($this->upload_basedir)) $this->upload_basedir = $this->tempdir . 'wpro' . time() . rand(0, 999999);
 		}
 		$data['basedir'] = $this->upload_basedir;
+		if (wpro_get_option('wpro-aws-ssl')) {
+			$service = 'https';
+		} else {
+			$service = 'http';
+		}
 		switch (wpro_get_option('wpro-service')) {
 		case 'ftp':
 			$data['baseurl'] = 'http://' . trim(str_replace('//', '/', trim(wpro_get_option('wpro-ftp-webroot'), '/') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
 			break;
 		default:
-			if (wpro_get_option('wpro-aws-virthost')) {
-				$data['baseurl'] = 'http://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+			if (wpro_get_option('wpro-aws-cloudfront')) {
+				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-cloudfront') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+			} elseif (wpro_get_option('wpro-aws-virthost')) {
+				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
 			} else {
-				$data['baseurl'] = 'http://s3.amazonaws.com/' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') .'/'. trim(wpro_get_option('wpro-folder'))), '/');
+				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro_get_option('wpro-folder'))), '/');
 			}
 		}
 		$data['path'] = $this->upload_basedir . $data['subdir'];
@@ -589,7 +610,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 		$this->debug('WordpressReadOnly::load_image_to_edit_path("' . $filepath . '");');
 
-		if (substr($filepath, 0, 7) == 'http://') {
+		if (substr($filepath, 0, 7) == 'http://' || substr($filepath, 0, 8) == 'https://') {
 
 			$ending = '';
 			if (preg_match('/\.([^\.\/]+)$/', $filepath, $regs)) $ending = '.' . $regs[1];
