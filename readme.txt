@@ -148,6 +148,10 @@ Todo list:
 		https://github.com/dechuck/wpro/commit/3b9fd6b158963a16c2a9ce541a5af241986776b5#diff-d41d8cd98f00b204e9800998ecf8427e
 		https://github.com/webngay/wpro/commit/72d12f723097716065ebee995a8762a6a3e2770b
 		https://github.com/genu/wpro/commits/master
+		https://github.com/Link7/wpro/commits/master
+		https://github.com/loenex/wpro/commits/master
+		https://github.com/remkade/wpro/commit/5992e052337c4f1cf72585d00f4c44401f69f85a
+		https://github.com/serl/wpro/commit/ef61c4f8b6c59a8847ef500fd607de9bc5cda3e0
 
 *	Add support for FTP:ing uploads to somewhere, as an alternative to
 	Amazon S3.
