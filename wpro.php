@@ -27,49 +27,49 @@ if ( !function_exists('sys_get_temp_dir')) {
 }
 
 // open_basedir / safe_mode disallows CURLOPT_FOLLOWLOCATION
-function curl_exec_follow($ch, &$maxredirect = null) { 
-    $mr = $maxredirect === null ? 5 : intval($maxredirect); 
-    if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off')) { 
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $mr > 0); 
-        curl_setopt($ch, CURLOPT_MAXREDIRS, $mr); 
-    } else { 
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false); 
-        if ($mr > 0) { 
-            $newurl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL); 
+function curl_exec_follow($ch, &$maxredirect = null) {
+    $mr = $maxredirect === null ? 5 : intval($maxredirect);
+    if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off')) {
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $mr > 0);
+        curl_setopt($ch, CURLOPT_MAXREDIRS, $mr);
+    } else {
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        if ($mr > 0) {
+            $newurl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
 
-            $rch = curl_copy_handle($ch); 
-            curl_setopt($rch, CURLOPT_HEADER, true); 
-            curl_setopt($rch, CURLOPT_NOBODY, true); 
-            curl_setopt($rch, CURLOPT_FORBID_REUSE, false); 
-            curl_setopt($rch, CURLOPT_RETURNTRANSFER, true); 
-            do { 
-                curl_setopt($rch, CURLOPT_URL, $newurl); 
-                $header = curl_exec($rch); 
-                if (curl_errno($rch)) { 
-                    $code = 0; 
-                } else { 
-                    $code = curl_getinfo($rch, CURLINFO_HTTP_CODE); 
-                    if ($code == 301 || $code == 302) { 
-                        preg_match('/Location:(.*?)\n/', $header, $matches); 
-                        $newurl = trim(array_pop($matches)); 
-                    } else { 
-                        $code = 0; 
-                    } 
-                } 
-            } while ($code && --$mr); 
-            curl_close($rch); 
-            if (!$mr) { 
-                if ($maxredirect === null) { 
-                    trigger_error('Too many redirects. When following redirects, libcurl hit the maximum amount.', E_USER_WARNING); 
-                } else { 
-                    $maxredirect = 0; 
-                } 
-                return false; 
-            } 
-            curl_setopt($ch, CURLOPT_URL, $newurl); 
-        } 
-    } 
-    return curl_exec($ch); 
+            $rch = curl_copy_handle($ch);
+            curl_setopt($rch, CURLOPT_HEADER, true);
+            curl_setopt($rch, CURLOPT_NOBODY, true);
+            curl_setopt($rch, CURLOPT_FORBID_REUSE, false);
+            curl_setopt($rch, CURLOPT_RETURNTRANSFER, true);
+            do {
+                curl_setopt($rch, CURLOPT_URL, $newurl);
+                $header = curl_exec($rch);
+                if (curl_errno($rch)) {
+                    $code = 0;
+                } else {
+                    $code = curl_getinfo($rch, CURLINFO_HTTP_CODE);
+                    if ($code == 301 || $code == 302) {
+                        preg_match('/Location:(.*?)\n/', $header, $matches);
+                        $newurl = trim(array_pop($matches));
+                    } else {
+                        $code = 0;
+                    }
+                }
+            } while ($code && --$mr);
+            curl_close($rch);
+            if (!$mr) {
+                if ($maxredirect === null) {
+                    trigger_error('Too many redirects. When following redirects, libcurl hit the maximum amount.', E_USER_WARNING);
+                } else {
+                    $maxredirect = 0;
+                }
+                return false;
+            }
+            curl_setopt($ch, CURLOPT_URL, $newurl);
+        }
+    }
+    return curl_exec($ch);
 }
 
 function wpro_get_option($option, $default = false) {
@@ -232,7 +232,7 @@ class WordpressReadOnlyS3 extends WordpressReadOnlyBackend {
 				if (substr($response, -7) == "\r\n0\r\n\r\n") break; // Keep-alive responses does not return EOF, they end with this string.
 			}
 		}
-	
+
 		fclose($fout);
 
 
@@ -275,8 +275,11 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		add_filter('wp_handle_upload', array($this, 'handle_upload')); // The very filter that takes care of uploads.
 		add_filter('upload_dir', array($this, 'upload_dir')); // Sets the paths and urls for uploads.
 		add_filter('wp_generate_attachment_metadata', array($this, 'generate_attachment_metadata')); // We use this filter to store resized versions of the images.
+		add_filter('wp_update_attachment_metadata', array($this, 'update_attachment_metadata')); // We use this filter to store resized versions of the images.
 		add_filter('load_image_to_edit_path', array($this, 'load_image_to_edit_path')); // This filter downloads the image to our local temporary directory, prior to editing the image.
-		add_filter('wp_save_image_file', array($this, 'save_image_file'), 10, 5); // Store image file.
+		add_filter('get_attached_file', array($this, 'load_image_to_local_path'), 10, 2); // This filter downloads the image to our local temporary directory, prior to using the image.
+		add_filter('wp_save_image_file', array($this, 'save_image_file')); // Store image file.
+		add_filter('wp_save_image_editor_file', array($this, 'save_image_file'), 10, 5);
 		add_filter('wp_upload_bits', array($this, 'upload_bits')); // On XMLRPC uploads, files arrives as strings, which we are handling in this filter.
 		add_filter('wp_handle_upload_prefilter', array($this, 'handle_upload_prefilter')); // This is where we check for filename dupes (and change them to avoid overwrites).
 		add_filter('shutdown', array($this, 'shutdown'));
@@ -411,22 +414,22 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 						<h3><?php echo __('Amazon S3 Settings'); ?></h3>
 						<table class="form-table">
 							<tr>
-								<th><label for="wpro-aws-key">AWS Key</label></th> 
+								<th><label for="wpro-aws-key">AWS Key</label></th>
 								<td><input name="wpro-aws-key" id="wpro-aws-key" type="text" value="<?php echo wpro_get_option('wpro-aws-key'); ?>" class="regular-text code" /></td>
 							</tr>
 							<tr>
-								<th><label for="wpro-aws-secret">AWS Secret</label></th> 
+								<th><label for="wpro-aws-secret">AWS Secret</label></th>
 								<td><input name="wpro-aws-secret" id="wpro-aws-secret" type="text" value="<?php echo wpro_get_option('wpro-aws-secret'); ?>" class="regular-text code" /></td>
 							</tr>
 							<tr>
-								<th><label for="wpro-aws-bucket">S3 Bucket</label></th> 
+								<th><label for="wpro-aws-bucket">S3 Bucket</label></th>
 								<td>
 									<input name="wpro-aws-bucket" id="wpro-aws-bucket" type="text" value="<?php echo wpro_get_option('wpro-aws-bucket'); ?>" class="regular-text code" /><br />
 									<input name="wpro-aws-virthost" id="wpro-aws-virthost" type="checkbox" value="1"  <?php if (wpro_get_option('wpro-aws-virthost')) echo('checked="checked"'); ?> /> Virtual hosting is enabled for this bucket.
 								</td>
 							</tr>
 							<tr>
-								<th><label for="wpro-aws-endpoint">Bucket AWS Region</label></th> 
+								<th><label for="wpro-aws-endpoint">Bucket AWS Region</label></th>
 								<td>
 									<select name="wpro-aws-endpoint" id="wpro-aws-endpoint">
 										<?php
@@ -450,7 +453,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 												echo ('>' . $endpoint_name . '</option>');
 											}
 										?>
-									</select> 
+									</select>
 								</td>
 							</tr>
 						</table>
@@ -459,17 +462,17 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 						<h3><?php echo __('FTP Settings'); ?></h3>
 						<table class="form-table">
 							<tr>
-								<th><label for="wpro-ftp-server">FTP Server</label></th> 
+								<th><label for="wpro-ftp-server">FTP Server</label></th>
 								<td><input name="wpro-ftp-server" id="wpro-ftp-server" type="text" value="<?php echo wpro_get_option('wpro-ftp-server'); ?>" class="regular-text code" /></td>
 							</tr>
 							<tr>
-								<th><label for="wpro-ftp-user">FTP Username</label></th> 
+								<th><label for="wpro-ftp-user">FTP Username</label></th>
 								<td><input name="wpro-ftp-user" id="wpro-ftp-user" type="text" value="<?php echo wpro_get_option('wpro-ftp-user'); ?>" class="regular-text code" /></td>
 							</tr>
 						</table>
 					</div>
-					<p class="submit"> 
-						<input type="submit" name="submit" class="button-primary" value="<?php echo __('Save Changes'); ?>" /> 
+					<p class="submit">
+						<input type="submit" name="submit" class="button-primary" value="<?php echo __('Save Changes'); ?>" />
 					</p>
 				</form>
 			</div>
@@ -520,7 +523,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		}
 		$data['path'] = $this->upload_basedir . $data['subdir'];
 		$data['url'] = $data['baseurl'] . $data['subdir'];
-
+		$this->removeTemporaryLocalData($data['path']);
 //		$this->debug('-> RETURNS = ');
 //		$this->debug(print_r($data, true));
 
@@ -528,6 +531,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	}
 
 	function generate_attachment_metadata($data) {
+		$this->debug('WordpressReadOnly::generate_attachment_metadata();');
 		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
 
 		$upload_dir = wp_upload_dir();
@@ -554,6 +558,32 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 		return $data;
 	}
+
+    function update_attachment_metadata($data) {
+		$this->debug('WordpressReadOnly::update_attachment_metadata();');
+        if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
+        $upload_dir = wp_upload_dir();
+        $filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
+        foreach ($data['sizes'] as $size => $sizedata) {
+            $file = $filepath . $sizedata['file'];
+			$url = $upload_dir['baseurl'] . substr($file, strlen($upload_dir['basedir']));
+            $mime = 'application/octet-stream';
+            switch(substr($file, -4)) {
+                case '.gif':
+                    $mime = 'image/gif';
+                    break;
+                case '.jpg':
+                    $mime = 'image/jpeg';
+                    break;
+                case '.png':
+                    $mime = 'image/png';
+                    break;
+            }
+
+            $this->backend->upload($file, $url, $mime);
+        }
+        return $data;
+    }
 
 	function load_image_to_edit_path($filepath) {
 
@@ -589,41 +619,58 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		return $filepath;
 	}
 
+	function load_image_to_local_path($filepath, $attachment_id) {
+
+		$this->debug('WordpressReadOnly::load_image_to_local_path("' . $filepath . '");');
+
+		$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', wp_get_attachment_url( $attachment_id ), $attachment_id, 'full' );
+
+		if (substr($fileurl, 0, 7) == 'http://') {
+
+			$fileurl = $this->url_normalizer($fileurl);
+
+			$this->debug('-> Loading file from: ' . $fileurl);
+			$this->debug('-> Storing file at: ' . $filepath);
+
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $fileurl);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_AUTOREFERER, true);
+
+			$fh = fopen($filepath, 'w');
+			fwrite($fh, curl_exec_follow($ch));
+			fclose($fh);
+
+			$this->removeTemporaryLocalData($filepath);
+
+			return $filepath;
+
+		}
+		return $filepath;
+	}
+
 	function save_image_file($dummy, $filename, $image, $mime_type, $post_id) {
 
-		$this->debug('WordpressReadOnly::save_image_file("' . $dummy . '", "' . $filename . '", "' . $image . '", "' . $mime_type . '", "' . $post_id . '");');
+		$this->debug('WordpressReadOnly::save_image_file("' . $filename . '", "' . $mime_type . '", "' . $post_id . '");');
+
 
 		if (substr($filename, 0, strlen($this->tempdir)) != $this->tempdir) return false;
-		$filename = substr($filename, strlen($this->tempdir));
-		if (!preg_match('/^wpro[0-9]+(\/.+)$/', $filename, $regs)) return false;
+		$tmpfile = substr($filename, strlen($this->tempdir));
+		if (!preg_match('/^wpro[0-9]+(\/.+)$/', $tmpfile, $regs)) return false;
 
-		$filename = $regs[1];
+		$tmpfile = $regs[1];
 
-		$tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999);
-		while (file_exists($tmpfile)) $tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999);
-		$this->debug('-> Storing image as temporary file: ' . $tmpfile);
-
-		switch ($mime_type) {
-			case 'image/jpeg':
-				imagejpeg($image, $tmpfile, apply_filters('jpeg_quality', 90, 'edit_image'));
-				break;
-			case 'image/png':
-				imagepng($image, $tmpfile);
-				break;
-			case 'image/gif':
-				imagegif($image, $tmpfile);
-				break;
-			default:
-				return false;
-		}
+		$this->debug('-> Storing image as temporary file: ' . $filename);
+		$image->save($filename, $mime_type);
 
 		$upload = wp_upload_dir();
 		$url = $upload['baseurl'];
 		if (substr($url, -1) != '/') $url .= '/';
-		while (substr($filename, 0, 1) == '/') $filename = substr($filename, 1);
-		$url .= $filename;
+		while (substr($tmpfile, 0, 1) == '/') $tmpfile = substr($tmpfile, 1);
+		$url .= $tmpfile;
 
-		return $this->backend->upload($tmpfile, $this->url_normalizer($url), $mime_type);
+		return $this->backend->upload($filename, $this->url_normalizer($url), $mime_type);
+
 	}
 
 	function upload_bits($data) {
