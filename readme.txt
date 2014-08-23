@@ -139,6 +139,12 @@ and [nmagee](https://github.com/nmagee "nmagee") for feedback and comments!
 
 Todo list:
 
+*	Have a look at those commits:
+		https://github.com/roryatbrightoak/wpro/commit/f594b7699ec49e1ff8d14f5898b68cdfeeb6e6cf
+		https://github.com/dechuck/wpro/commit/3b9fd6b158963a16c2a9ce541a5af241986776b5#diff-d41d8cd98f00b204e9800998ecf8427e
+		https://github.com/webngay/wpro/commit/72d12f723097716065ebee995a8762a6a3e2770b
+		https://github.com/genu/wpro/commits/master
+
 *	Add support for FTP:ing uploads to somewhere, as an alternative to
 	Amazon S3.
 *	For WPMU: Store media in a single bucket, but separate them by site, in
@@ -146,3 +152,4 @@ Todo list:
 *	Only handle `new` medias when activating this plugin on an existing
 	site. Today it's an all-or-nothing approach, and you will have to
 	migrate your media to S3.
+*	Are we supporting all S3 regions?
