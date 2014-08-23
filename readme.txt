@@ -161,3 +161,12 @@ Todo list:
 	site. Today it's an all-or-nothing approach, and you will have to
 	migrate your media to S3.
 *	Are we supporting all S3 regions?
+*	Check out JSON API support.
+*	Are we still creating a shitload of /tmp folders?
+*	Buddypress-avatar upload does not work. Is this related? https://github.com/ramalveyra/wpro/commit/5e74ac0729f020b0f231766e4504c1a2fff4f919
+*	Delete media support.
+*	Testa wordpress importer.
+*	Custom header images does not work. I guess this is unfixable?
+*	Is CURLOPT_FOLLOWLOCATION still a problem? Test it.
+
+
