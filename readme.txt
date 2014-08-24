@@ -104,6 +104,8 @@ And, plz, use tabs for indenting! :)
 If you define the constant WPRO_DEBUG in your wp-config.php, then
 some debug data will be written to /tmp/wpro-debug
 
+There is a Makefile, which will help you to run the unit tests.
+
 = What about the license? =
 
 Read more about GPLv2 here:
@@ -168,5 +170,5 @@ Todo list:
 *	Testa wordpress importer.
 *	Custom header images does not work. I guess this is unfixable?
 *	Is CURLOPT_FOLLOWLOCATION still a problem? Test it.
-
+*	Make sure we are tagging the versions in the git repo properly. Also check out: https://getcomposer.org/doc/articles/aliases.md under "branch alias".
 

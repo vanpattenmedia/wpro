@@ -1,11 +1,16 @@
 {
     "name": "istrategylabs/wpro",
     "description": "Wordpress Read-Only",
-    "homepage": "http://github.com/istrategylabs/wpro",
+    "homepage": "http://github.com/alfreddatakillen/wpro",
     "type": "wordpress-plugin",
     "extra": {
         "branch-alias": {
             "dev-composer": "1.0.x-dev"
         }
-    }
+    },
+	"require-dev": {
+		"phpunit/phpunit": "*",
+		"wp-cli/wp-cli": "*",
+		"wpreadme2markdown/wpreadme2markdown": "*"
+	}
 }
