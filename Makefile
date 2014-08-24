@@ -2,6 +2,7 @@ help:
 	# make deps    	      - Install dependencies.
 	# make builddocs      - Convert WordPress the readme.txt into GitHub README.md markdown.
 	# make installtestenv - Install unit testing environment.
+	# make test           - Run unit tests.
 	# make clean          - Remove build and test junk from filesystem.
 	#
 	# Requirements for everything to work:
@@ -19,6 +20,9 @@ builddocs: deps
 
 installtestenv:
 	bin/install-wp-tests.sh wprotest root ""
+
+test:
+	vendor/bin/phpunit
 
 clean:
 	rm -Rf vendor composer.lock

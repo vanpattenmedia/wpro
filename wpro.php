@@ -9,21 +9,10 @@ Author URI: http://nurd.nu/
 License: GPLv2
  */
 
-// define('WPRO_DEBUG', true);
+define('WPRO_DEBUG', true);
 
-// PHP < 5.2.1 compatibility
-if ( !function_exists('sys_get_temp_dir')) {
-	function sys_get_temp_dir() {
-		if( $temp = getenv('TMP') ) return $temp;
-		if( $temp = getenv('TEMP') ) return $temp;
-		if( $temp = getenv('TMPDIR') ) return $temp;
-		$temp = tempnam(__FILE__, '');
-		if (file_exists($temp)) {
-			unlink($temp);
-			return dirname($temp);
-		}
-		return null;
-	}
+foreach (glob(plugin_dir_path(__FILE__) . "src/*.php" ) as $file) {
+	include_once $file;
 }
 
 // open_basedir / safe_mode disallows CURLOPT_FOLLOWLOCATION
@@ -262,7 +251,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 	function __construct() {
 		if (!defined('WPRO_ON') || !WPRO_ON) {
-			add_action('admin_init', array($this, 'admin_init')); // Register the settings.
+			add_action('init', array($this, 'init')); // Register the settings.
 			// if ($this->is_trusted()) { // To early to find out, however in admin_init hook, it seems(?) to be too late to add network_admin_menu (which is weird, but i don't get it working there.)
 				if (is_multisite()) {
 					add_action('network_admin_menu', array($this, 'network_admin_menu'));
@@ -318,10 +307,10 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	  REGISTER THE SETTINGS:
 	* * * * * * * * * * * * * * * * * * * * * * */
 
-	function admin_init() {
+	function init() {
 		add_site_option('wpro-service', '');
 		add_site_option('wpro-folder', '');
-		add_site_option('wpro-tempdir', sys_get_temp_dir() );
+		add_site_option('wpro-tempdir', sys_get_temp_dir());
 		add_site_option('wpro-aws-key', '');
 		add_site_option('wpro-aws-secret', '');
 		add_site_option('wpro-aws-bucket', '');
@@ -334,6 +323,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		add_site_option('wpro-ftp-password', '');
 		add_site_option('wpro-ftp-pasvmode', '');
 		add_site_option('wpro-ftp-webroot', '');
+		echo("asouenthesunheoasuheos");
 	}
 
 
@@ -539,7 +529,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 //		$this->debug(print_r($data, true));
 
 		if ($this->upload_basedir == '') {
-			$this->upload_basedir = $this->tempdir . 'wpro' . time() . rand(0, 999999);
+			$this->upload_basedir = wpro_reqTmpDir();
 			while (is_dir($this->upload_basedir)) $this->upload_basedir = $this->tempdir . 'wpro' . time() . rand(0, 999999);
 		}
 		$data['basedir'] = $this->upload_basedir;
@@ -566,8 +556,8 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 		$this->removeTemporaryLocalData($data['path']);
 
-//		$this->debug('-> RETURNS = ');
-//		$this->debug(print_r($data, true));
+		$this->debug('-> RETURNS = ');
+		$this->debug(print_r($data, true));
 
 		return $data;
 	}
@@ -800,6 +790,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		$this->debug(print_r($this->temporaryLocalData, true));
 
 		$tempdir = wpro_get_option('wpro-tempdir');
+
 		if (substr($tempdir, -1) == '/') $tempdir = substr($tempdir, 0, -1);
 
 		foreach ($this->temporaryLocalData as $file) {
