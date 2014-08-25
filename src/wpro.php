@@ -229,7 +229,7 @@ class WPRO extends WPROGeneric {
 	function init() {
 		foreach (wpro_all_option_keys() as $key) {
 			add_site_option($key, '');
-		});
+		};
 	}
 
 
