@@ -205,7 +205,7 @@ class WPRO extends WPROGeneric {
 			$this->backend = new WPROS3();
 		}
 
-		$this->tempdir = wpro_get_option('wpro-tempdir');
+		$this->tempdir = wpro_get_option('wpro-tempdir', wpro_sysTmpDir());
 		if (substr($this->tempdir, -1) != '/') $this->tempdir = $this->tempdir . '/';
 	}
 
@@ -227,21 +227,9 @@ class WPRO extends WPROGeneric {
 	* * * * * * * * * * * * * * * * * * * * * * */
 
 	function init() {
-		add_site_option('wpro-service', '');
-		add_site_option('wpro-folder', '');
-		add_site_option('wpro-tempdir', sys_get_temp_dir());
-		add_site_option('wpro-aws-key', '');
-		add_site_option('wpro-aws-secret', '');
-		add_site_option('wpro-aws-bucket', '');
-		add_site_option('wpro-aws-cloudfront', '');
-		add_site_option('wpro-aws-virthost', '');
-		add_site_option('wpro-aws-endpoint', '');
-		add_site_option('wpro-aws-ssl', '');
-		add_site_option('wpro-ftp-server', '');
-		add_site_option('wpro-ftp-user', '');
-		add_site_option('wpro-ftp-password', '');
-		add_site_option('wpro-ftp-pasvmode', '');
-		add_site_option('wpro-ftp-webroot', '');
+		foreach (wpro_all_option_keys() as $key) {
+			add_site_option($key, '');
+		});
 	}
 
 
@@ -336,7 +324,7 @@ class WPRO extends WPROGeneric {
 						</tr>
 						<tr>
 							<th><label for="wpro-tempdir">Temp directory (must be writable by web server)</th>
-							<td><input name="wpro-tempdir" id="wpro-tempdir" type="text" value="<?php echo(wpro_get_option('wpro-tempdir')); ?>" class="regular-text code" /></td>
+							<td><input name="wpro-tempdir" id="wpro-tempdir" type="text" value="<?php echo(wpro_get_option('wpro-tempdir', wpro_sysTmpDir())); ?>" class="regular-text code" /></td>
 						</tr>
 					</table>
 					<div class="wpro-service-div" id="wpro-service-s3-div" <?php if ($wproService == 'ftp') echo ('style="display:none"'); ?> >
@@ -709,7 +697,7 @@ class WPRO extends WPROGeneric {
 		wpro_debug('-> $this->temporaryLocalData = ');
 		wpro_debug(print_r($this->temporaryLocalData, true));
 
-		$tempdir = wpro_get_option('wpro-tempdir');
+		$tempdir = wpro_get_option('wpro-tempdir', wpro_sysTmpDir());
 
 		if (substr($tempdir, -1) == '/') $tempdir = substr($tempdir, 0, -1);
 
