@@ -46,18 +46,18 @@ function curl_exec_follow($ch, &$maxredirect = null) {
     return curl_exec($ch);
 }
 
-new WordpressReadOnly;
+new WPRO;
 
 /* * * * * * * * * * * * * * * * * * * * * * *
   GENERIC FUNCTION FOR NORMALIZING URLS:
 * * * * * * * * * * * * * * * * * * * * * * */
 
-class WordpressReadOnlyGeneric {
+class WPROGeneric {
 
 	public $temporaryLocalData = array();
 
 	function removeTemporaryLocalData($file) {
-		wpro_debug('WordpressReadOnlyGeneric::removeTemporaryLocalData("' . $file . '");');
+		wpro_debug('WPROGeneric::removeTemporaryLocalData("' . $file . '");');
 		$this->temporaryLocalData[] = $file;
 	}
 
@@ -74,7 +74,7 @@ class WordpressReadOnlyGeneric {
   BACKENDS:
 * * * * * * * * * * * * * * * * * * * * * * */
 
-class WordpressReadOnlyBackend extends WordpressReadOnlyGeneric {
+class WPROBackend extends WPROGeneric {
 
 	function upload($localpath, $url, $mimetype) {
 		return false;
@@ -82,7 +82,7 @@ class WordpressReadOnlyBackend extends WordpressReadOnlyGeneric {
 
 	function file_exists($path) {
 
-		wpro_debug('WordpressReadOnlyBackend::file_exists("' . $path . '");');
+		wpro_debug('WPROBackend::file_exists("' . $path . '");');
 
 		$path = $this->url_normalizer($path);
 
@@ -107,7 +107,7 @@ class WordpressReadOnlyBackend extends WordpressReadOnlyGeneric {
 
 }
 
-class WordpressReadOnlyFTP extends WordpressReadOnlyBackend {
+class WPROFTP extends WPROBackend {
 
 	function __construct() {
 	}
@@ -118,7 +118,7 @@ class WordpressReadOnlyFTP extends WordpressReadOnlyBackend {
 
 }
 
-class WordpressReadOnlyS3 extends WordpressReadOnlyBackend {
+class WPROS3 extends WPROBackend {
 
 	public $key;
 	public $secret;
@@ -133,7 +133,7 @@ class WordpressReadOnlyS3 extends WordpressReadOnlyBackend {
 	}
 
 	function upload($file, $fullurl, $mime) {
-		wpro_debug('WordpressReadOnlyS3::upload("' . $file . '", "' . $fullurl . '", "' . $mime . '");');
+		wpro_debug('WPROS3::upload("' . $file . '", "' . $fullurl . '", "' . $mime . '");');
 		$fullurl = $this->url_normalizer($fullurl);
 		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $fullurl, $regs)) return false;
 		$url = $regs[3];
@@ -209,7 +209,7 @@ class WordpressReadOnlyS3 extends WordpressReadOnlyBackend {
   THE MAIN PLUGIN CLASS:
 * * * * * * * * * * * * * * * * * * * * * * */
 
-class WordpressReadOnly extends WordpressReadOnlyGeneric {
+class WPRO extends WPROGeneric {
 
 	public $backend = null;
 	public $tempdir = '/tmp';
@@ -245,10 +245,10 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 		switch (wpro_get_option('wpro-service')) {
 		case 'ftp':
-			$this->backend = new WordpressReadOnlyFTP();
+			$this->backend = new WPROFTP();
 			break;
 		default:
-			$this->backend = new WordpressReadOnlyS3();
+			$this->backend = new WPROS3();
 		}
 
 		$this->tempdir = wpro_get_option('wpro-tempdir');
@@ -474,7 +474,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 		wpro_debug(print_r(wpro_get_all_options(), true));
 
-		wpro_debug('WordpressReadOnly::handle_upload($data);');
+		wpro_debug('WPRO::handle_upload($data);');
 		wpro_debug('-> $data = ');
 		wpro_debug(print_r($data, true));
 
@@ -490,7 +490,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 	public $upload_basedir = ''; // Variable for caching in the upload_dir()-method
 	function upload_dir($data) {
-//		wpro_debug('WordpressReadOnly::upload_dir($data);');
+//		wpro_debug('WPRO::upload_dir($data);');
 //		wpro_debug('-> $data = ');
 //		wpro_debug(print_r($data, true));
 
@@ -529,7 +529,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	}
 
 	function generate_attachment_metadata($data) {
-		wpro_debug('WordpressReadOnly::generate_attachment_metadata();');
+		wpro_debug('WPRO::generate_attachment_metadata();');
 		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
 
 		$upload_dir = wp_upload_dir();
@@ -558,7 +558,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	}
 
     function update_attachment_metadata($data) {
-		wpro_debug('WordpressReadOnly::update_attachment_metadata();');
+		wpro_debug('WPRO::update_attachment_metadata();');
         if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
         $upload_dir = wp_upload_dir();
         $filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
@@ -585,7 +585,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 	function load_image_to_edit_path($filepath) {
 
-		wpro_debug('WordpressReadOnly::load_image_to_edit_path("' . $filepath . '");');
+		wpro_debug('WPRO::load_image_to_edit_path("' . $filepath . '");');
 
 		if (substr($filepath, 0, 7) == 'http://' || substr($filepath, 0, 8) == 'https://') {
 
@@ -619,7 +619,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 	function load_image_to_local_path($filepath, $attachment_id) {
 
-		wpro_debug('WordpressReadOnly::load_image_to_local_path("' . $filepath . '");');
+		wpro_debug('WPRO::load_image_to_local_path("' . $filepath . '");');
 
 		$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', wp_get_attachment_url( $attachment_id ), $attachment_id, 'full' );
 
@@ -649,7 +649,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 	function save_image_file($dummy, $filename, $image, $mime_type, $post_id) {
 
-		wpro_debug('WordpressReadOnly::save_image_file("' . $filename . '", "' . $mime_type . '", "' . $post_id . '");');
+		wpro_debug('WPRO::save_image_file("' . $filename . '", "' . $mime_type . '", "' . $post_id . '");');
 
 
 		if (substr($filename, 0, strlen($this->tempdir)) != $this->tempdir) return false;
@@ -673,7 +673,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 	function upload_bits($data) {
 
-		wpro_debug('WordpressReadOnly::upload_bits($data);');
+		wpro_debug('WPRO::upload_bits($data);');
 		wpro_debug('-> $data = ');
 		wpro_debug(print_r($data, true));
 
@@ -700,7 +700,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	// Wordpress never calls the wp_handle_upload_overrides filter properly, so we do not have any good way of setting a callback for wp_unique_filename_callback, which would be the most beautiful way of doing this. So, instead we are usting the wp_handle_upload_prefilter to check for duplicates and rename the files...
 	function handle_upload_prefilter($file) {
 
-		wpro_debug('WordpressReadOnly::handle_upload_prefilter($file);');
+		wpro_debug('WPRO::handle_upload_prefilter($file);');
 		wpro_debug('-> $file = ');
 		wpro_debug(print_r($file, true));
 
@@ -728,7 +728,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	}
 
 	function gravityforms_after_submission($entry, $form) {
-		wpro_debug('WordpressReadOnly::gravityforms_after_submission($entry, $form);');
+		wpro_debug('WPRO::gravityforms_after_submission($entry, $form);');
 
 		$upload_dir = wp_upload_dir();
 		foreach($form['fields'] as $field) {
@@ -748,7 +748,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	}
 
 	function shutdown() {
-		wpro_debug('WordpressReadOnly::shutdown()');
+		wpro_debug('WPRO::shutdown()');
 
 		$this->temporaryLocalData = array_merge($this->temporaryLocalData, $this->backend->temporaryLocalData,  array($this->upload_basedir));
 
