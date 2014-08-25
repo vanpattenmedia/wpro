@@ -84,6 +84,7 @@ class WPROS3 extends WPROBackend {
 		$this->secret = wpro_get_option('wpro-aws-secret');
 		$this->bucket = wpro_get_option('wpro-aws-bucket');
 		$this->endpoint = wpro_get_option('wpro-aws-endpoint');
+		wpro_debug('WPROS3::endpoint = ' . $this->endpoint);
 	}
 
 	function upload($file, $fullurl, $mime) {
@@ -248,22 +249,7 @@ class WPRO extends WPROGeneric {
 		// This is because the Settings API has no way of storing network wide options in multisite installs.
 		if (!$this->is_trusted()) return false;
 		if ($_POST['action'] != 'wpro_settings_POST') return false;
-		foreach (array(
-			'wpro-service', 
-			'wpro-folder', 
-			'wpro-tempdir', 
-			'wpro-aws-key', 
-			'wpro-aws-secret', 
-			'wpro-aws-bucket', 
-			'wpro-aws-cloudfront',
-			'wpro-aws-virthost', 
-			'wpro-aws-endpoint', 
-			'wpro-ftp-server', 
-			'wpro-ftp-user', 
-			'wpro-ftp-password', 
-			'wpro-ftp-pasvmode',
-			'wpro-aws-ssl'
-		) as $allowedPostData) {
+		foreach (wpro_all_option_keys() as $allowedPostData) {
 			$data = false;
 			if (isset($_POST[$allowedPostData])) $data = stripslashes($_POST[$allowedPostData]);
 			update_site_option($allowedPostData, $data);
@@ -452,11 +438,29 @@ class WPRO extends WPROGeneric {
 			break;
 		default:
 			if (wpro_get_option('wpro-aws-cloudfront')) {
-				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-cloudfront') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+#				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-cloudfront') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+				$data['baseurl'] = 'CLOUDFRONT YADA YADA ';
 			} elseif (wpro_get_option('wpro-aws-virthost')) {
-				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+#				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+				$data['baseurl'] = 'VIRTUAL HOST YADA YADA';
 			} else {
-				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro_get_option('wpro-folder'))), '/');
+
+
+
+				# this needs some more testing, but it seems like we have to use the
+			    # virtual-hosted-style for US Standard region, and the path-style
+				# for region-specific endpoints:
+				# (however we used the virtual-hosted style for everything before,
+				# and that did work, so something has changed at amazons end.
+				# is there any difference between old and new buckets?)
+				if (wpro_get_option('wpro-aws-endpoint') == 's3.amazonaws.com') {
+					$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro_get_option('wpro-folder'))), '/');
+				} else {
+					$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-endpoint') . '/' . wpro_get_option('wpro-aws-bucket') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+				}
+
+
+
 			}
 		}
 		$data['path'] = $this->upload_basedir . $data['subdir'];
