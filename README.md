@@ -172,5 +172,6 @@ Todo list:
 *	Custom header images does not work. I guess this is unfixable?
 *	Is CURLOPT_FOLLOWLOCATION still a problem? Test it.
 *	Make sure we are tagging the versions in the git repo properly. Also check out: https://getcomposer.org/doc/articles/aliases.md under "branch alias".
+*	At unsuccessful upload, an attachment is still created in the wp database. Thats wrong.
 
 
