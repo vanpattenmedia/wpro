@@ -583,7 +583,9 @@ class WPRO extends WPROGeneric {
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_AUTOREFERER, true);
 
-			mkdir(dirname($filepath), 0777, true);
+			if (!is_dir(dirname($filepath))) {
+				mkdir(dirname($filepath), 0777, true);
+			}
 			$fh = fopen($filepath, 'w');
 			fwrite($fh, curl_exec_follow($ch));
 			fclose($fh);
