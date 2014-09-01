@@ -565,6 +565,8 @@ class WPRO extends WPROGeneric {
 
 	function load_image_to_local_path($filepath, $attachment_id) {
 
+		// Varför körs den här skiten på varje bildladdning?! Det ska den inte göra!
+
 		wpro_debug('WPRO::load_image_to_local_path("' . $filepath . '");');
 
 		$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', wp_get_attachment_url( $attachment_id ), $attachment_id, 'full' );
@@ -581,6 +583,7 @@ class WPRO extends WPROGeneric {
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_AUTOREFERER, true);
 
+			mkdir(dirname($filepath), 0777, true);
 			$fh = fopen($filepath, 'w');
 			fwrite($fh, curl_exec_follow($ch));
 			fclose($fh);
