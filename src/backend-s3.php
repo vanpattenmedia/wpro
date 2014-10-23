@@ -8,6 +8,13 @@ class WPRO_Backend_S3 {
 
 	function __construct() {
 		$this->name = 'Amazon S3';
+		wpro()->options->register('wpro-aws-key');
+		wpro()->options->register('wpro-aws-secret');
+		wpro()->options->register('wpro-aws-bucket');
+		wpro()->options->register('wpro-aws-cloudfront');
+		wpro()->options->register('wpro-aws-virthost');
+		wpro()->options->register('wpro-aws-endpoint');
+		wpro()->options->register('wpro-aws-ssl');
 	}
 
 }
