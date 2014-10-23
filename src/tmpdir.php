@@ -4,6 +4,12 @@ if (!defined('ABSPATH')) exit();
 
 class WPRO_TmpDir {
 
+	private $requestUid;
+
+	function __construct() {
+		$this->requestUid = time() . rand(0, 999999);
+	}
+
 	// Returns the system temporary dir, or any temporary dir we may be able to use:
 	function sysTmpDir() {
 		if (!function_exists('sys_get_temp_dir')) {
@@ -23,7 +29,7 @@ class WPRO_TmpDir {
 
 	// temporary directory for this request only: ( == base dir )
 	function reqTmpDir() {
-		return $this->sysTmpDir() . '/wpro' . time() . rand(0, 999999);
+		return $this->sysTmpDir() . '/wpro' . $this->requestUid;
 	}
 
 }

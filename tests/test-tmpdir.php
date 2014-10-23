@@ -18,6 +18,11 @@ class TmpDirTest extends WP_UnitTestCase {
 		$this->assertStringEndsNotWith(wpro()->tmpdir->reqTmpDir(), '/');
 	}
 
+	function testRequestTemporaryDirectoryShouldBeSameEachTimeWithinTheSameRequest() {
+		$this->assertEquals(wpro()->tmpdir->reqTmpDir(), wpro()->tmpdir->reqTmpDir());
+		$this->assertEquals(wpro()->tmpdir->reqTmpDir(), wpro()->tmpdir->reqTmpDir());
+		$this->assertEquals(wpro()->tmpdir->reqTmpDir(), wpro()->tmpdir->reqTmpDir());
+	}
 
 }
 
