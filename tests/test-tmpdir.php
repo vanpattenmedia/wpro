@@ -32,5 +32,13 @@ class TmpDirTest extends WP_UnitTestCase {
 		$this->assertFalse(file_exists(wpro()->tmpdir->reqTmpDir()));
 	}
 
+	function testToOverrideSystemTemporaryDirectoryWithOption() {
+		$noOptSysTmpDir = wpro()->tmpdir->sysTmpDir();
+		wpro()->options->set('wpro-tempdir', '/alfred/was/here');
+		$this->assertEquals(wpro()->tmpdir->sysTmpDir(), '/alfred/was/here');
+		wpro()->options->set('wpro-tempdir', '');
+		$this->assertEquals($noOptSysTmpDir, wpro()->tmpdir->sysTmpDir());
+	}
+
 }
 
