@@ -21,10 +21,17 @@ class WPRO_Core {
 			require_once($file);
 		}
 
+		$this->backends = new WPRO_Backends();
 		$this->debug = new WPRO_Debug();
 		$this->options = new WPRO_Options();
 		$this->tmpdir = new WPRO_TmpDir();
 		$this->url = new WPRO_Url();
+
+		add_action('after_setup_theme', array($this, 'init'));
+	}
+
+	function init() {
+		do_action('wpro_setup_backends');
 	}
 
 	/**
