@@ -59,4 +59,9 @@ class WPRO_Options {
 		}
 	}
 
+	function set($option, $value) {
+		if (!$this->is_an_option($option)) return false;
+		return update_site_option($option, $value);
+	}
+
 }

@@ -30,4 +30,15 @@ class BackendTest extends WP_UnitTestCase {
 		$this->assertTrue(wpro()->backends->register($backend3));
 	}
 
+	function testStandardBackendsAreRegistered() {
+		$this->assertTrue(wpro()->backends->has_backend('Amazon S3'));
+	}
+
+	function testActiveBackendBackwardsCompatibilityForS3() {
+		$this->assertTrue(wpro()->options->set('wpro-service', 's3')); // Set to old legacy value.
+		$active_backend = wpro()->backends->active_backend();
+		$this->assertNotNull($active_backend);
+		$this->assertEquals($active_backend->name, 'Amazon S3');
+	}
+	
 }

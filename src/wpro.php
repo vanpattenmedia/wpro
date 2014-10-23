@@ -173,17 +173,6 @@ class WPRO extends WPROGeneric {
 				add_action('admin_post_wpro_settings_POST', array($this, 'admin_post')); // Gets called from plugin admin page POST request.
 			// }
 		}
-		add_filter('wp_handle_upload', array($this, 'handle_upload')); // The very filter that takes care of uploads.
-		add_filter('upload_dir', array($this, 'upload_dir')); // Sets the paths and urls for uploads.
-		add_filter('wp_generate_attachment_metadata', array($this, 'generate_attachment_metadata')); // We use this filter to store resized versions of the images.
-		add_filter('wp_update_attachment_metadata', array($this, 'update_attachment_metadata')); // We use this filter to store resized versions of the images.
-		add_filter('load_image_to_edit_path', array($this, 'load_image_to_edit_path')); // This filter downloads the image to our local temporary directory, prior to editing the image.
-		add_filter('get_attached_file', array($this, 'load_image_to_local_path'), 10, 2); // This filter downloads the image to our local temporary directory, prior to using the image.
-		add_filter('wp_save_image_file', array($this, 'save_image_file')); // Store image file.
-		add_filter('wp_save_image_editor_file', array($this, 'save_image_file'), 10, 5);
-		add_filter('wp_upload_bits', array($this, 'upload_bits')); // On XMLRPC uploads, files arrives as strings, which we are handling in this filter.
-		add_filter('wp_handle_upload_prefilter', array($this, 'handle_upload_prefilter')); // This is where we check for filename dupes (and change them to avoid overwrites).
-		add_filter('shutdown', array($this, 'shutdown'));
 
 		// Support for Gravity Forms if Gravity Forms is enabled
 		if(class_exists("GFCommon")) {
@@ -393,64 +382,6 @@ class WPRO extends WPROGeneric {
 
 		$response = $this->backend->upload($data['file'], $data['url'], $data['type']);
 		if (!$response) return false;
-
-		return $data;
-	}
-
-	public $upload_basedir = ''; // Variable for caching in the upload_dir()-method
-	function upload_dir($data) {
-//		wpro()->debug->log('WPRO::upload_dir($data);');
-//		wpro()->debug->log('-> $data = ');
-//		wpro()->debug->log(print_r($data, true));
-
-		if ($this->upload_basedir == '') {
-			$this->upload_basedir = wpro()->tmpdir->reqTmpDir();
-			while (is_dir($this->upload_basedir)) $this->upload_basedir = $this->tempdir . 'wpro' . time() . rand(0, 999999);
-		}
-		$data['basedir'] = $this->upload_basedir;
-		if (wpro()->options->get('wpro-aws-ssl')) {
-			$service = 'https';
-		} else {
-			$service = 'http';
-		}
-		switch (wpro()->options->get('wpro-service')) {
-		case 'ftp':
-			$data['baseurl'] = 'http://' . trim(str_replace('//', '/', trim(wpro()->options->get('wpro-ftp-webroot'), '/') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
-			break;
-		default:
-			if (wpro()->options->get('wpro-aws-cloudfront')) {
-#				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-cloudfront') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
-				$data['baseurl'] = 'CLOUDFRONT YADA YADA ';
-			} elseif (wpro()->options->get('wpro-aws-virthost')) {
-#				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-bucket') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
-				$data['baseurl'] = 'VIRTUAL HOST YADA YADA';
-			} else {
-
-
-
-				# this needs some more testing, but it seems like we have to use the
-			    # virtual-hosted-style for US Standard region, and the path-style
-				# for region-specific endpoints:
-				# (however we used the virtual-hosted style for everything before,
-				# and that did work, so something has changed at amazons end.
-				# is there any difference between old and new buckets?)
-				if (wpro()->options->get('wpro-aws-endpoint') == 's3.amazonaws.com') {
-					$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro()->options->get('wpro-folder'))), '/');
-				} else {
-					$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-endpoint') . '/' . wpro()->options->get('wpro-aws-bucket') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
-				}
-
-
-
-			}
-		}
-		$data['path'] = $this->upload_basedir . $data['subdir'];
-		$data['url'] = $data['baseurl'] . $data['subdir'];
-
-		$this->removeTemporaryLocalData($data['path']);
-
-		wpro()->debug->log('-> RETURNS = ');
-		wpro()->debug->log(print_r($data, true));
 
 		return $data;
 	}
@@ -677,7 +608,7 @@ class WPRO extends WPROGeneric {
 	function shutdown() {
 		wpro()->debug->log('WPRO::shutdown()');
 
-		$this->temporaryLocalData = array_merge($this->temporaryLocalData, $this->backend->temporaryLocalData,  array($this->upload_basedir));
+	//	$this->temporaryLocalData = array_merge($this->temporaryLocalData, $this->backend->temporaryLocalData,  array($this->upload_basedir));
 
 		wpro()->debug->log('-> $this->temporaryLocalData = ');
 		wpro()->debug->log(print_r($this->temporaryLocalData, true));

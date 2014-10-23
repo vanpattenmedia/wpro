@@ -10,6 +10,20 @@ class WPRO_Backends {
 		$this->instances = array();
 	}
 
+	function active_backend() {
+		$service = wpro()->options->get('wpro-service');
+
+		// For backwards compatibility:
+		if ($service === 's3') $service = 'Amazon S3';
+
+		foreach ($this->instances as $instance) {
+			if ($instance->name == $service) {
+				return $instance;
+			}
+		}
+		return null;
+	}
+
 	function backend_names() {
 		$result = [];
 		foreach ($this->instances as $instance) {
