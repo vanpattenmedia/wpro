@@ -20,6 +20,14 @@ class BackendTest extends WP_UnitTestCase {
 
 		// Registering the instance once again. Should return false.
 		$this->assertFalse(wpro()->backends->register($backend));
+
+		// Regostering another instance with the same name. Should not work. Names must be unique.
+		$backend2 = new ExampleBackendClass('Unit Test Backend');
+		$this->assertFalse(wpro()->backends->register($backend));
+
+		// Regostering yet another instance with another name. Should work.
+		$backend3 = new ExampleBackendClass('3rd Unit Test Backend');
+		$this->assertTrue(wpro()->backends->register($backend3));
 	}
 
 }
