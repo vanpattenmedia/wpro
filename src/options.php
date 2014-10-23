@@ -64,4 +64,10 @@ class WPRO_Options {
 		return update_site_option($option, $value);
 	}
 
+	function register($option) {
+		if (!in_array($option, $this->option_keys)) {
+			$this->option_keys[] = $option;
+		}
+	}
+
 }

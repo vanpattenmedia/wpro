@@ -22,5 +22,11 @@ class OptionsTest extends WP_UnitTestCase {
 		$this->assertFalse(wpro()->options->is_an_option('wpro-some-bullshit'));
 	}
 
+
+	function testRegisterOption() {
+		$this->assertFalse(wpro()->options->is_an_option('unit-test-option'));
+		wpro()->options->register('unit-test-option');
+		$this->assertTrue(wpro()->options->is_an_option('unit-test-option'));
+	}
 }
 
