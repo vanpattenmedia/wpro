@@ -3,19 +3,19 @@
 class TmpDirTest extends WP_UnitTestCase {
 
 	function testSystemTemporaryDirectoryShouldBeSomething() {
-		$this->assertNotEmpty(wpro_sysTmpDir());
+		$this->assertNotEmpty(wpro()->tmpdir->sysTmpDir());
 	}
 
 	function testSystemTemporaryDirectoryShouldNotHaveTailingSlash() {
-		$this->assertStringEndsNotWith(wpro_sysTmpDir(), '/');
+		$this->assertStringEndsNotWith(wpro()->tmpdir->sysTmpDir(), '/');
 	}
 
 	function testRequestTmpDirToBeSubdirToTheSystemTmpDir() {
-		$this->assertStringStartsWith(wpro_sysTmpDir() . '/wpro', wpro_reqTmpDir());
+		$this->assertStringStartsWith(wpro()->tmpdir->sysTmpDir() . '/wpro', wpro()->tmpdir->reqTmpDir());
 	}
 
 	function testRequestTemporaryDirectoryShouldNotHaveTailingSlash() {
-		$this->assertStringEndsNotWith(wpro_reqTmpDir(), '/');
+		$this->assertStringEndsNotWith(wpro()->tmpdir->reqTmpDir(), '/');
 	}
 
 

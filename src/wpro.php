@@ -11,7 +11,7 @@ class WPROGeneric {
 	public $temporaryLocalData = array();
 
 	function removeTemporaryLocalData($file) {
-		wpro_debug('WPROGeneric::removeTemporaryLocalData("' . $file . '");');
+		wpro()->debug->log('WPROGeneric::removeTemporaryLocalData("' . $file . '");');
 		$this->temporaryLocalData[] = $file;
 	}
 
@@ -36,11 +36,11 @@ class WPROBackend extends WPROGeneric {
 
 	function file_exists($path) {
 
-		wpro_debug('WPROBackend::file_exists("' . $path . '");');
+		wpro()->debug->log('WPROBackend::file_exists("' . $path . '");');
 
 		$path = $this->url_normalizer($path);
 
-		wpro_debug('-> testing url: ' . $path);
+		wpro()->debug->log('-> testing url: ' . $path);
 
 		// If at this point, the testing url is not a full http url,
 		// then there is something wrong in the wp_upload_dir functionality,
@@ -52,7 +52,7 @@ class WPROBackend extends WPROGeneric {
 		$result = trim(curl_exec_follow($ch));
 
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		wpro_debug('-> http return code: ' . $httpCode);
+		wpro()->debug->log('-> http return code: ' . $httpCode);
 
 		if ($httpCode != 200) return false;
 
@@ -80,15 +80,15 @@ class WPROS3 extends WPROBackend {
 	public $endpoint;
 
 	function __construct() {
-		$this->key = wpro_get_option('wpro-aws-key');
-		$this->secret = wpro_get_option('wpro-aws-secret');
-		$this->bucket = wpro_get_option('wpro-aws-bucket');
-		$this->endpoint = wpro_get_option('wpro-aws-endpoint');
-		wpro_debug('WPROS3::endpoint = ' . $this->endpoint);
+		$this->key = wpro()->options->get('wpro-aws-key');
+		$this->secret = wpro()->options->get('wpro-aws-secret');
+		$this->bucket = wpro()->options->get('wpro-aws-bucket');
+		$this->endpoint = wpro()->options->get('wpro-aws-endpoint');
+		wpro()->debug->log('WPROS3::endpoint = ' . $this->endpoint);
 	}
 
 	function upload($file, $fullurl, $mime) {
-		wpro_debug('WPROS3::upload("' . $file . '", "' . $fullurl . '", "' . $mime . '");');
+		wpro()->debug->log('WPROS3::upload("' . $file . '", "' . $fullurl . '", "' . $mime . '");');
 		$fullurl = $this->url_normalizer($fullurl);
 		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $fullurl, $regs)) return false;
 		$url = $regs[3];
@@ -104,11 +104,11 @@ class WPROS3 extends WPROBackend {
 		$datetime = gmdate('r');
 		$string2sign = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . $url;
 
-		wpro_debug('STRING TO SIGN:');
-		wpro_debug($string2sign);
+		wpro()->debug->log('STRING TO SIGN:');
+		wpro()->debug->log($string2sign);
 		$debug = '';
 		for ($i = 0; $i < strlen($string2sign); $i++) $debug .= dechex(ord(substr($string2sign, $i, 1))) . ' ';
-		wpro_debug($debug);
+		wpro()->debug->log($debug);
 
 		// Todo: Make this work with php cURL instead of fsockopen/etc..
 
@@ -121,22 +121,22 @@ class WPROS3 extends WPROBackend {
 		$query .= "Date: " . $datetime . "\n";
 		$query .= "Authorization: AWS " . $this->key . ":" . $this->amazon_hmac($string2sign) . "\n\n";
 
-		wpro_debug('SEND:');
-		wpro_debug($query);
+		wpro()->debug->log('SEND:');
+		wpro()->debug->log($query);
 
 		fwrite($fout, $query);
 		while (feof($fin) === false) fwrite($fout, fread($fin, 8192));
 		fclose($fin);
 
 		// Get the amazon response:
-		wpro_debug('RECEIVE:');
+		wpro()->debug->log('RECEIVE:');
 		$response = '';
 		while (!feof($fout)) {
 			$data = fgets($fout, 256);
-			wpro_debug($data);
+			wpro()->debug->log($data);
 			$response .= $data;
 			if (strpos($response, "\r\n\r\n") !== false) { // Header fully returned.
-				wpro_debug('ALL RESPONSE HEADERS RECEIVED.');
+				wpro()->debug->log('ALL RESPONSE HEADERS RECEIVED.');
 				if (strpos($response, 'Content-Length: 0') !== false) break; // Return if Content-Length: 0 (and header is fully returned)
 				if (substr($response, -7) == "\r\n0\r\n\r\n") break; // Keep-alive responses does not return EOF, they end with this string.
 			}
@@ -171,7 +171,6 @@ class WPRO extends WPROGeneric {
 
 	function __construct() {
 		if (!defined('WPRO_ON') || !WPRO_ON) {
-			add_action('init', array($this, 'init')); // Register the settings.
 			// if ($this->is_trusted()) { // To early to find out, however in admin_init hook, it seems(?) to be too late to add network_admin_menu (which is weird, but i don't get it working there.)
 				if (is_multisite()) {
 					add_action('network_admin_menu', array($this, 'network_admin_menu'));
@@ -198,7 +197,7 @@ class WPRO extends WPROGeneric {
 			add_action("gform_after_submission", array($this, 'gravityforms_after_submission'), 10, 2);
 		}
 
-		switch (wpro_get_option('wpro-service')) {
+		switch (wpro()->options->get('wpro-service')) {
 		case 'ftp':
 			$this->backend = new WPROFTP();
 			break;
@@ -206,7 +205,7 @@ class WPRO extends WPROGeneric {
 			$this->backend = new WPROS3();
 		}
 
-		$this->tempdir = wpro_get_option('wpro-tempdir', wpro_sysTmpDir());
+		$this->tempdir = wpro()->options->get('wpro-tempdir', wpro()->tmpdir->sysTmpDir());
 		if (substr($this->tempdir, -1) != '/') $this->tempdir = $this->tempdir . '/';
 	}
 
@@ -222,17 +221,6 @@ class WPRO extends WPROGeneric {
 		}
 		return false;
 	}
-
-	/* * * * * * * * * * * * * * * * * * * * * * *
-	  REGISTER THE SETTINGS:
-	* * * * * * * * * * * * * * * * * * * * * * */
-
-	function init() {
-		foreach (wpro_all_option_keys() as $key) {
-			add_site_option($key, '');
-		};
-	}
-
 
 	/* * * * * * * * * * * * * * * * * * * * * * *
 	  ADMIN MENU:
@@ -263,7 +251,7 @@ class WPRO extends WPROGeneric {
 			wp_die ( __ ('You do not have sufficient permissions to access this page.'));
 		}
 
-		$wproService = wpro_get_option('wpro-service');
+		$wproService = wpro()->options->get('wpro-service');
 
 		?>
 			<script language="JavaScript">
@@ -306,11 +294,11 @@ class WPRO extends WPROGeneric {
 						</tr>
 						<tr>
 							<th><label for="wpro-folder">Prepend all paths with folder</th>
-							<td><input name="wpro-folder" id="wpro-folder" type="text" value="<?php echo(wpro_get_option('wpro-folder')); ?>" class="regular-text code" /></td>
+							<td><input name="wpro-folder" id="wpro-folder" type="text" value="<?php echo(wpro()->options->get('wpro-folder')); ?>" class="regular-text code" /></td>
 						</tr>
 						<tr>
 							<th><label for="wpro-tempdir">Temp directory (must be writable by web server)</th>
-							<td><input name="wpro-tempdir" id="wpro-tempdir" type="text" value="<?php echo(wpro_get_option('wpro-tempdir', wpro_sysTmpDir())); ?>" class="regular-text code" /></td>
+							<td><input name="wpro-tempdir" id="wpro-tempdir" type="text" value="<?php echo(wpro()->options->get('wpro-tempdir', wpro()->tmpdir->sysTmpDir())); ?>" class="regular-text code" /></td>
 						</tr>
 					</table>
 					<div class="wpro-service-div" id="wpro-service-s3-div" <?php if ($wproService == 'ftp') echo ('style="display:none"'); ?> >
@@ -318,29 +306,29 @@ class WPRO extends WPROGeneric {
 						<table class="form-table">
 							<tr>
 								<th><label for="wpro-aws-key">AWS Key</label></th>
-								<td><input name="wpro-aws-key" id="wpro-aws-key" type="text" value="<?php echo wpro_get_option('wpro-aws-key'); ?>" class="regular-text code" /></td>
+								<td><input name="wpro-aws-key" id="wpro-aws-key" type="text" value="<?php echo wpro()->options->get('wpro-aws-key'); ?>" class="regular-text code" /></td>
 							</tr>
 							<tr>
 								<th><label for="wpro-aws-secret">AWS Secret</label></th>
-								<td><input name="wpro-aws-secret" id="wpro-aws-secret" type="text" value="<?php echo wpro_get_option('wpro-aws-secret'); ?>" class="regular-text code" /></td>
+								<td><input name="wpro-aws-secret" id="wpro-aws-secret" type="text" value="<?php echo wpro()->options->get('wpro-aws-secret'); ?>" class="regular-text code" /></td>
 							</tr>
 							<tr>
 								<th><label for="wpro-aws-bucket">S3 Bucket</label></th>
 								<td>
-									<input name="wpro-aws-bucket" id="wpro-aws-bucket" type="text" value="<?php echo wpro_get_option('wpro-aws-bucket'); ?>" class="regular-text code" /><br />
-									<input name="wpro-aws-virthost" id="wpro-aws-virthost" type="checkbox" value="1"  <?php if (wpro_get_option('wpro-aws-virthost')) echo('checked="checked"'); ?> /> Virtual hosting is enabled for this bucket.
+									<input name="wpro-aws-bucket" id="wpro-aws-bucket" type="text" value="<?php echo wpro()->options->get('wpro-aws-bucket'); ?>" class="regular-text code" /><br />
+									<input name="wpro-aws-virthost" id="wpro-aws-virthost" type="checkbox" value="1"  <?php if (wpro()->options->get('wpro-aws-virthost')) echo('checked="checked"'); ?> /> Virtual hosting is enabled for this bucket.
 								</td>
 							</tr>
 							<tr>
 								<th><label for="wpro-aws-cloudfront">CloudFront Distribution Domain</label></th> 
 								<td>
-									<input name="wpro-aws-cloudfront" id="wpro-aws-cloudfront" type="text" value="<?php echo wpro_get_option('wpro-aws-cloudfront'); ?>" class="regular-text code" />
+									<input name="wpro-aws-cloudfront" id="wpro-aws-cloudfront" type="text" value="<?php echo wpro()->options->get('wpro-aws-cloudfront'); ?>" class="regular-text code" />
 								</td>
 							</tr>
 							<tr>
 								<th><label for="wpro-aws-ssl">AWS SSL</label></th>
 								<td>
-									<input name="wpro-aws-ssl" id="wpro-aws-ssl" type="checkbox" value="1"  <?php if (wpro_get_option('wpro-aws-ssl')) echo('checked="checked"'); ?> />
+									<input name="wpro-aws-ssl" id="wpro-aws-ssl" type="checkbox" value="1"  <?php if (wpro()->options->get('wpro-aws-ssl')) echo('checked="checked"'); ?> />
 								</td>
 							</tr>
 							<tr>
@@ -362,7 +350,7 @@ class WPRO extends WPROGeneric {
 
 											foreach ($aws_regions as $endpoint => $endpoint_name) {
 												echo ('<option value="' . $endpoint . '"');
-												if ($endpoint == wpro_get_option('wpro-aws-endpoint')) {
+												if ($endpoint == wpro()->options->get('wpro-aws-endpoint')) {
 													echo(' selected="selected"');
 												}
 												echo ('>' . $endpoint_name . '</option>');
@@ -378,11 +366,11 @@ class WPRO extends WPROGeneric {
 						<table class="form-table">
 							<tr>
 								<th><label for="wpro-ftp-server">FTP Server</label></th>
-								<td><input name="wpro-ftp-server" id="wpro-ftp-server" type="text" value="<?php echo wpro_get_option('wpro-ftp-server'); ?>" class="regular-text code" /></td>
+								<td><input name="wpro-ftp-server" id="wpro-ftp-server" type="text" value="<?php echo wpro()->options->get('wpro-ftp-server'); ?>" class="regular-text code" /></td>
 							</tr>
 							<tr>
 								<th><label for="wpro-ftp-user">FTP Username</label></th>
-								<td><input name="wpro-ftp-user" id="wpro-ftp-user" type="text" value="<?php echo wpro_get_option('wpro-ftp-user'); ?>" class="regular-text code" /></td>
+								<td><input name="wpro-ftp-user" id="wpro-ftp-user" type="text" value="<?php echo wpro()->options->get('wpro-ftp-user'); ?>" class="regular-text code" /></td>
 							</tr>
 						</table>
 					</div>
@@ -400,11 +388,11 @@ class WPRO extends WPROGeneric {
 
 	function handle_upload($data) {
 
-		wpro_debug(print_r(wpro_get_all_options(), true));
+		wpro()->debug->log(print_r(wpro_get_all_options(), true));
 
-		wpro_debug('WPRO::handle_upload($data);');
-		wpro_debug('-> $data = ');
-		wpro_debug(print_r($data, true));
+		wpro()->debug->log('WPRO::handle_upload($data);');
+		wpro()->debug->log('-> $data = ');
+		wpro()->debug->log(print_r($data, true));
 
 		$data['url'] = $this->url_normalizer($data['url']);
 
@@ -418,30 +406,30 @@ class WPRO extends WPROGeneric {
 
 	public $upload_basedir = ''; // Variable for caching in the upload_dir()-method
 	function upload_dir($data) {
-//		wpro_debug('WPRO::upload_dir($data);');
-//		wpro_debug('-> $data = ');
-//		wpro_debug(print_r($data, true));
+//		wpro()->debug->log('WPRO::upload_dir($data);');
+//		wpro()->debug->log('-> $data = ');
+//		wpro()->debug->log(print_r($data, true));
 
 		if ($this->upload_basedir == '') {
-			$this->upload_basedir = wpro_reqTmpDir();
+			$this->upload_basedir = wpro()->tmpdir->reqTmpDir();
 			while (is_dir($this->upload_basedir)) $this->upload_basedir = $this->tempdir . 'wpro' . time() . rand(0, 999999);
 		}
 		$data['basedir'] = $this->upload_basedir;
-		if (wpro_get_option('wpro-aws-ssl')) {
+		if (wpro()->options->get('wpro-aws-ssl')) {
 			$service = 'https';
 		} else {
 			$service = 'http';
 		}
-		switch (wpro_get_option('wpro-service')) {
+		switch (wpro()->options->get('wpro-service')) {
 		case 'ftp':
-			$data['baseurl'] = 'http://' . trim(str_replace('//', '/', trim(wpro_get_option('wpro-ftp-webroot'), '/') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+			$data['baseurl'] = 'http://' . trim(str_replace('//', '/', trim(wpro()->options->get('wpro-ftp-webroot'), '/') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
 			break;
 		default:
-			if (wpro_get_option('wpro-aws-cloudfront')) {
-#				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-cloudfront') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+			if (wpro()->options->get('wpro-aws-cloudfront')) {
+#				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-cloudfront') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
 				$data['baseurl'] = 'CLOUDFRONT YADA YADA ';
-			} elseif (wpro_get_option('wpro-aws-virthost')) {
-#				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+			} elseif (wpro()->options->get('wpro-aws-virthost')) {
+#				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-bucket') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
 				$data['baseurl'] = 'VIRTUAL HOST YADA YADA';
 			} else {
 
@@ -453,10 +441,10 @@ class WPRO extends WPROGeneric {
 				# (however we used the virtual-hosted style for everything before,
 				# and that did work, so something has changed at amazons end.
 				# is there any difference between old and new buckets?)
-				if (wpro_get_option('wpro-aws-endpoint') == 's3.amazonaws.com') {
-					$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro_get_option('wpro-folder'))), '/');
+				if (wpro()->options->get('wpro-aws-endpoint') == 's3.amazonaws.com') {
+					$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro()->options->get('wpro-folder'))), '/');
 				} else {
-					$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-endpoint') . '/' . wpro_get_option('wpro-aws-bucket') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
+					$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-endpoint') . '/' . wpro()->options->get('wpro-aws-bucket') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
 				}
 
 
@@ -468,14 +456,14 @@ class WPRO extends WPROGeneric {
 
 		$this->removeTemporaryLocalData($data['path']);
 
-		wpro_debug('-> RETURNS = ');
-		wpro_debug(print_r($data, true));
+		wpro()->debug->log('-> RETURNS = ');
+		wpro()->debug->log(print_r($data, true));
 
 		return $data;
 	}
 
 	function generate_attachment_metadata($data) {
-		wpro_debug('WPRO::generate_attachment_metadata();');
+		wpro()->debug->log('WPRO::generate_attachment_metadata();');
 		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
 
 		$upload_dir = wp_upload_dir();
@@ -504,7 +492,7 @@ class WPRO extends WPROGeneric {
 	}
 
     function update_attachment_metadata($data) {
-		wpro_debug('WPRO::update_attachment_metadata();');
+		wpro()->debug->log('WPRO::update_attachment_metadata();');
         if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
         $upload_dir = wp_upload_dir();
         $filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
@@ -531,7 +519,7 @@ class WPRO extends WPROGeneric {
 
 	function load_image_to_edit_path($filepath) {
 
-		wpro_debug('WPRO::load_image_to_edit_path("' . $filepath . '");');
+		wpro()->debug->log('WPRO::load_image_to_edit_path("' . $filepath . '");');
 
 		if (substr($filepath, 0, 7) == 'http://' || substr($filepath, 0, 8) == 'https://') {
 
@@ -543,8 +531,8 @@ class WPRO extends WPROGeneric {
 
 			$filepath = $this->url_normalizer($filepath);
 
-			wpro_debug('-> Loading file from: ' . $filepath);
-			wpro_debug('-> Storing file at: ' . $tmpfile);
+			wpro()->debug->log('-> Loading file from: ' . $filepath);
+			wpro()->debug->log('-> Storing file at: ' . $tmpfile);
 
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $filepath);
@@ -565,7 +553,7 @@ class WPRO extends WPROGeneric {
 
 	function load_image_to_local_path($filepath, $attachment_id) {
 
-		wpro_debug('WPRO::load_image_to_local_path("' . $filepath . '");');
+		wpro()->debug->log('WPRO::load_image_to_local_path("' . $filepath . '");');
 
 		$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', wp_get_attachment_url( $attachment_id ), $attachment_id, 'full' );
 
@@ -573,8 +561,8 @@ class WPRO extends WPROGeneric {
 
 			$fileurl = $this->url_normalizer($fileurl);
 
-			wpro_debug('-> Loading file from: ' . $fileurl);
-			wpro_debug('-> Storing file at: ' . $filepath);
+			wpro()->debug->log('-> Loading file from: ' . $fileurl);
+			wpro()->debug->log('-> Storing file at: ' . $filepath);
 
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $fileurl);
@@ -595,7 +583,7 @@ class WPRO extends WPROGeneric {
 
 	function save_image_file($dummy, $filename, $image, $mime_type, $post_id) {
 
-		wpro_debug('WPRO::save_image_file("' . $filename . '", "' . $mime_type . '", "' . $post_id . '");');
+		wpro()->debug->log('WPRO::save_image_file("' . $filename . '", "' . $mime_type . '", "' . $post_id . '");');
 
 
 		if (substr($filename, 0, strlen($this->tempdir)) != $this->tempdir) return false;
@@ -604,7 +592,7 @@ class WPRO extends WPROGeneric {
 
 		$tmpfile = $regs[1];
 
-		wpro_debug('-> Storing image as temporary file: ' . $filename);
+		wpro()->debug->log('-> Storing image as temporary file: ' . $filename);
 		$image->save($filename, $mime_type);
 
 		$upload = wp_upload_dir();
@@ -619,9 +607,9 @@ class WPRO extends WPROGeneric {
 
 	function upload_bits($data) {
 
-		wpro_debug('WPRO::upload_bits($data);');
-		wpro_debug('-> $data = ');
-		wpro_debug(print_r($data, true));
+		wpro()->debug->log('WPRO::upload_bits($data);');
+		wpro()->debug->log('-> $data = ');
+		wpro()->debug->log(print_r($data, true));
 
 		$ending = '';
 		if (preg_match('/\.([^\.\/]+)$/', $data['name'], $regs)) $ending = '.' . $regs[1];
@@ -646,9 +634,9 @@ class WPRO extends WPROGeneric {
 	// Wordpress never calls the wp_handle_upload_overrides filter properly, so we do not have any good way of setting a callback for wp_unique_filename_callback, which would be the most beautiful way of doing this. So, instead we are usting the wp_handle_upload_prefilter to check for duplicates and rename the files...
 	function handle_upload_prefilter($file) {
 
-		wpro_debug('WPRO::handle_upload_prefilter($file);');
-		wpro_debug('-> $file = ');
-		wpro_debug(print_r($file, true));
+		wpro()->debug->log('WPRO::handle_upload_prefilter($file);');
+		wpro()->debug->log('-> $file = ');
+		wpro()->debug->log(print_r($file, true));
 
 		$upload = wp_upload_dir();
 
@@ -674,7 +662,7 @@ class WPRO extends WPROGeneric {
 	}
 
 	function gravityforms_after_submission($entry, $form) {
-		wpro_debug('WPRO::gravityforms_after_submission($entry, $form);');
+		wpro()->debug->log('WPRO::gravityforms_after_submission($entry, $form);');
 
 		$upload_dir = wp_upload_dir();
 		foreach($form['fields'] as $field) {
@@ -694,14 +682,14 @@ class WPRO extends WPROGeneric {
 	}
 
 	function shutdown() {
-		wpro_debug('WPRO::shutdown()');
+		wpro()->debug->log('WPRO::shutdown()');
 
 		$this->temporaryLocalData = array_merge($this->temporaryLocalData, $this->backend->temporaryLocalData,  array($this->upload_basedir));
 
-		wpro_debug('-> $this->temporaryLocalData = ');
-		wpro_debug(print_r($this->temporaryLocalData, true));
+		wpro()->debug->log('-> $this->temporaryLocalData = ');
+		wpro()->debug->log(print_r($this->temporaryLocalData, true));
 
-		$tempdir = wpro_get_option('wpro-tempdir', wpro_sysTmpDir());
+		$tempdir = wpro()->options->get('wpro-tempdir', wpro()->tmpdir->sysTmpDir());
 
 		if (substr($tempdir, -1) == '/') $tempdir = substr($tempdir, 0, -1);
 
@@ -715,10 +703,10 @@ class WPRO extends WPROGeneric {
 					} else {
 						if (is_file($file)) {
 							if (@unlink($file) == false) break;
-							wpro_debug('-> Removed file: ' . $file);
+							wpro()->debug->log('-> Removed file: ' . $file);
 						} else if (is_dir($file)) {
 							if (@rmdir($file) == false) break;
-							wpro_debug('-> Removed directory: ' . $file);
+							wpro()->debug->log('-> Removed directory: ' . $file);
 						} else {
 							break;
 						}

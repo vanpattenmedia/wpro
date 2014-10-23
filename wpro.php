@@ -9,8 +9,57 @@ Author URI: http://nurd.nu/
 License: GPLv2
  */
 
-define('WPRO_DEBUG', true);
+if (!defined('ABSPATH')) exit();
 
-foreach (glob(plugin_dir_path(__FILE__) . "src/*.php" ) as $file) {
-	include_once $file;
+class WPRO_Core {
+
+	private static $instance;
+
+
+	function __construct() {
+		foreach (glob(plugin_dir_path(__FILE__) . "src/*.php" ) as $file) {
+			require_once($file);
+		}
+
+		$this->debug = new WPRO_Debug();
+		$this->options = new WPRO_Options();
+		$this->tmpdir = new WPRO_TmpDir();
+	}
+
+	/**
+	* Initialize the singleton
+	*/
+
+	public static function instance() {
+		if ( ! isset( self::$instance ) ) {
+			self::$instance = new WPRO_Core;
+		}
+		return self::$instance;
+	}
+
+	/**
+	* Prevent cloning
+	*/
+
+	function __clone() {
+	}
+
+	/**
+	* Prevent unserializing
+	*/
+
+	function __wakeup() {
+	}
+
 }
+
+/**
+ * Allow direct access to WPRO classes
+ */
+
+function wpro() {
+	return WPRO_Core::instance();
+}
+
+wpro();
+

@@ -102,7 +102,7 @@ And, plz, use tabs for indenting! :)
 ### What should I think of when digging the code? ###
 
 If you define the constant WPRO_DEBUG in your wp-config.php, then
-some debug data will be written to /tmp/wpro-debug
+some debug data will be written to your PHP error log.
 
 There is a Makefile, which will help you to run the unit tests.
 Note: You need [composer](https://getcomposer.org/ "composer") to do the unit testing.
