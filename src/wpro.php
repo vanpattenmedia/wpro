@@ -15,13 +15,6 @@ class WPROGeneric {
 		$this->temporaryLocalData[] = $file;
 	}
 
-	function url_normalizer($url) {
-		if (strpos($url, '%') !== false) return $url;
-		$url = explode('/', $url);
-		foreach ($url as $key => $val) $url[$key] = urlencode($val);
-		return str_replace('%3A', ':', join('/', $url));
-	}
-
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * *
@@ -38,7 +31,7 @@ class WPROBackend extends WPROGeneric {
 
 		wpro()->debug->log('WPROBackend::file_exists("' . $path . '");');
 
-		$path = $this->url_normalizer($path);
+		$path = $this->wpro()->url->normalize($path);
 
 		wpro()->debug->log('-> testing url: ' . $path);
 
@@ -89,7 +82,7 @@ class WPROS3 extends WPROBackend {
 
 	function upload($file, $fullurl, $mime) {
 		wpro()->debug->log('WPROS3::upload("' . $file . '", "' . $fullurl . '", "' . $mime . '");');
-		$fullurl = $this->url_normalizer($fullurl);
+		$fullurl = $this->wpro()->url->normalize($fullurl);
 		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $fullurl, $regs)) return false;
 		$url = $regs[3];
 
@@ -394,7 +387,7 @@ class WPRO extends WPROGeneric {
 		wpro()->debug->log('-> $data = ');
 		wpro()->debug->log(print_r($data, true));
 
-		$data['url'] = $this->url_normalizer($data['url']);
+		$data['url'] = $this->wpro()->url->normalize($data['url']);
 
 		if (!file_exists($data['file'])) return false;
 
@@ -529,7 +522,7 @@ class WPRO extends WPROGeneric {
 			$tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
 			while (file_exists($tmpfile)) $tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
 
-			$filepath = $this->url_normalizer($filepath);
+			$filepath = $this->wpro()->url->normalize($filepath);
 
 			wpro()->debug->log('-> Loading file from: ' . $filepath);
 			wpro()->debug->log('-> Storing file at: ' . $tmpfile);
@@ -559,7 +552,7 @@ class WPRO extends WPROGeneric {
 
 		if (substr($fileurl, 0, 7) == 'http://') {
 
-			$fileurl = $this->url_normalizer($fileurl);
+			$fileurl = $this->wpro()->url->normalize($fileurl);
 
 			wpro()->debug->log('-> Loading file from: ' . $fileurl);
 			wpro()->debug->log('-> Storing file at: ' . $filepath);
@@ -601,7 +594,7 @@ class WPRO extends WPROGeneric {
 		while (substr($tmpfile, 0, 1) == '/') $tmpfile = substr($tmpfile, 1);
 		$url .= $tmpfile;
 
-		return $this->backend->upload($filename, $this->url_normalizer($url), $mime_type);
+		return $this->backend->upload($filename, $this->wpro()->url->normalize($url), $mime_type);
 
 	}
 
@@ -625,7 +618,7 @@ class WPRO extends WPROGeneric {
 
 		return array(
 			'file' => $tmpfile,
-			'url' => $this->url_normalizer($upload['url'] . '/' . $data['name']),
+			'url' => $this->wpro()->url->normalize($upload['url'] . '/' . $data['name']),
 			'error' => false
 		);
 	}

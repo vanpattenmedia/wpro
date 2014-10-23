@@ -24,6 +24,7 @@ class WPRO_Core {
 		$this->debug = new WPRO_Debug();
 		$this->options = new WPRO_Options();
 		$this->tmpdir = new WPRO_TmpDir();
+		$this->url = new WPRO_Url();
 	}
 
 	/**
