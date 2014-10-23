@@ -19,9 +19,7 @@ function wpro_debug($msg) {
 	$wpro_debug_cache[] = trim($msg);
 
 	if (defined('WPRO_DEBUG') && WPRO_DEBUG) {
-		$fh = fopen('/tmp/wpro-debug', 'a');
-		fwrite($fh, trim($msg) . "\n");
-		fclose($fh);
+		error_log($msg);
 	}
 }
 
