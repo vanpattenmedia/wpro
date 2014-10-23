@@ -24,5 +24,13 @@ class TmpDirTest extends WP_UnitTestCase {
 		$this->assertEquals(wpro()->tmpdir->reqTmpDir(), wpro()->tmpdir->reqTmpDir());
 	}
 
+	function testCleanUpShouldRemoveTemporaryDirectoryRecursively() {
+		mkdir(wpro()->tmpdir->reqTmpDir() . '/alfred/was', 0777, true);
+		touch(wpro()->tmpdir->reqTmpDir() . '/alfred/was/here');
+		$this->assertTrue(file_exists(wpro()->tmpdir->reqTmpDir()));
+		wpro()->tmpdir->cleanUp();
+		$this->assertFalse(file_exists(wpro()->tmpdir->reqTmpDir()));
+	}
+
 }
 
