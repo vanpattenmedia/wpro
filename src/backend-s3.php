@@ -15,6 +15,15 @@ class WPRO_Backend_S3 {
 		wpro()->options->register('wpro-aws-virthost');
 		wpro()->options->register('wpro-aws-endpoint');
 		wpro()->options->register('wpro-aws-ssl');
+
+		add_filter('wpro_backend_retrieval_protocol', array($this, 'retrieval_protocol'));
+	}
+
+	function retrieval_protocol($protocol) {
+		if (wpro()->options->get('wpro-aws-ssl')) {
+			return 'https';
+		}
+		return 'http';
 	}
 
 }

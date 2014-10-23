@@ -24,6 +24,17 @@ class WPRO_Backends {
 		return null;
 	}
 
+	function backend_by_name($name) {
+		// The backwards compatibility check (in active_backend()) is probably not required here.
+		// If we need to add it, there should be an unit test for it.
+		foreach ($this->instances as $instance) {
+			if ($instance->name == $name) {
+				return $instance;
+			}
+		}
+		return null;
+	}
+
 	function backend_names() {
 		$result = [];
 		foreach ($this->instances as $instance) {

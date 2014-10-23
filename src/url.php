@@ -13,6 +13,10 @@ class WPRO_Url {
 	}
 
 	function upload_dir($data) {
+
+		$backend = wpro()->backends->active_backend();
+		if (is_null($backend)) return $data;
+
 		$data['basedir'] = wpro()->tmpdir->reqTmpDir();
 
 
@@ -43,21 +47,19 @@ Array
 
 
 */
-		if (wpro()->options->get('wpro-aws-ssl')) {
-			$service = 'https';
-		} else {
-			$service = 'http';
-		}
+		$protocol = apply_filters('wpro_backend_retrieval_protocol', 'http');
+
+
 		switch (wpro()->options->get('wpro-service')) {
 		case 'ftp':
 			$data['baseurl'] = 'http://' . trim(str_replace('//', '/', trim(wpro()->options->get('wpro-ftp-webroot'), '/') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
 			break;
 		default:
 			if (wpro()->options->get('wpro-aws-cloudfront')) {
-#				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-cloudfront') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
+#				$data['baseurl'] = $protocol . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-cloudfront') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
 				$data['baseurl'] = 'CLOUDFRONT YADA YADA ';
 			} elseif (wpro()->options->get('wpro-aws-virthost')) {
-#				$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-bucket') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
+#				$data['baseurl'] = $protocol . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-bucket') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
 				$data['baseurl'] = 'VIRTUAL HOST YADA YADA';
 			} else {
 
@@ -70,9 +72,9 @@ Array
 				# and that did work, so something has changed at amazons end.
 				# is there any difference between old and new buckets?)
 				if (wpro()->options->get('wpro-aws-endpoint') == 's3.amazonaws.com') {
-					$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro()->options->get('wpro-folder'))), '/');
+					$data['baseurl'] = $protocol . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro()->options->get('wpro-folder'))), '/');
 				} else {
-					$data['baseurl'] = $service . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-endpoint') . '/' . wpro()->options->get('wpro-aws-bucket') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
+					$data['baseurl'] = $protocol . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-endpoint') . '/' . wpro()->options->get('wpro-aws-bucket') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
 				}
 
 
