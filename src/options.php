@@ -19,25 +19,6 @@ class WPRO_Options {
 		add_action('init', array($this, 'init')); // Register the settings.
 	}
 
-	function init() {
-		// Register all settings:
-		foreach ($this->option_keys as $key) {
-			add_site_option($key, '');
-		};
-	}
-
-	function get_all_options() {
-		$result = array();
-		foreach ($this->option_keys as $key) {
-			$result[$key] = $this->get_option($key);
-		}
-		return $result;
-	}
-
-	function is_an_option($option) {
-		return in_array($option, $this->option_keys);
-	}
-
 	function get($option, $default = false) {
 		if (!$this->is_an_option($option)) return null;
 
@@ -52,15 +33,34 @@ class WPRO_Options {
 		}
 	}
 
-	function set($option, $value) {
-		if (!$this->is_an_option($option)) return false;
-		return update_site_option($option, $value);
+	function get_all_options() {
+		$result = array();
+		foreach ($this->option_keys as $key) {
+			$result[$key] = $this->get_option($key);
+		}
+		return $result;
+	}
+
+	function init() {
+		// Register all settings:
+		foreach ($this->option_keys as $key) {
+			add_site_option($key, '');
+		};
+	}
+
+	function is_an_option($option) {
+		return in_array($option, $this->option_keys);
 	}
 
 	function register($option) {
 		if (!in_array($option, $this->option_keys)) {
 			$this->option_keys[] = $option;
 		}
+	}
+
+	function set($option, $value) {
+		if (!$this->is_an_option($option)) return false;
+		return update_site_option($option, $value);
 	}
 
 }
