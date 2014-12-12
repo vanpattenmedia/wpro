@@ -26,3 +26,7 @@ class WPRO_Gravityforms {
 		}
 	}
 }
+
+if (class_exists('GFCommon')) {
+	$wpro_gravityforms = new WPRO_Gravityforms();
+}
