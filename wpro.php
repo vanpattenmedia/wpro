@@ -26,7 +26,6 @@ class WPRO_Core {
 		$this->backends = new WPRO_Backends();
 		$this->cdn = new WPRO_CDN();
 		$this->debug = new WPRO_Debug();
-		if (class_exists("GFCommon")) $this->gravityforms = new WPRO_Gravityforms();
 		$this->options = new WPRO_Options();
 		$this->tmpdir = new WPRO_TmpDir();
 		$this->uploads = new WPRO_Uploads();
