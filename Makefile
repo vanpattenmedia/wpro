@@ -19,6 +19,7 @@ builddocs: deps
 	vendor/bin/wp2md convert < readme.txt > README.md
 
 installtestenv:
+	mysql -e "DROP DATABASE IF EXISTS wprotest;" --user=root --password=""
 	bin/install-wp-tests.sh wprotest root ""
 
 test:

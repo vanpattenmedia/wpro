@@ -14,7 +14,7 @@ class WPRO_Url {
 
 	function upload_dir($data) {
 
-		$backend = wpro()->backends->active_backend();
+		$backend = wpro()->backends->active_backend;
 		if (is_null($backend)) return $data;
 
 		$baseurl = apply_filters('wpro_backend_retrieval_baseurl', $data['baseurl']);

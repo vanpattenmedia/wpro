@@ -1,8 +1,23 @@
 <?php
 
+class BackendTest extends WP_UnitTestCase {
+
+	function testDeactivationOfBackendShouldMakeActiveBackendNull() {
+		wpro()->backends->deactivate_backend();
+		$this->assertNull(wpro()->backends->active_backend);
+	}
+
+	function testBackendByNameShouldReturnNullIfNonexisting() {
+		$this->assertNull(wpro()->backends->backend_by_name('this_shit_does_not_exist'));
+	}
+
+}
+
+
+/*
 class ExampleBackendClass {
 
-	public $name;
+	const NAME = "Example";
 
 	function __construct($name) {
 		$this->name = $name;
@@ -36,9 +51,11 @@ class BackendTest extends WP_UnitTestCase {
 
 	function testActiveBackendBackwardsCompatibilityForS3() {
 		$this->assertTrue(wpro()->options->set('wpro-service', 's3')); // Set to old legacy value.
-		$active_backend = wpro()->backends->active_backend();
+		$active_backend = wpro()->backends->active_backend;
 		$this->assertNotNull($active_backend);
 		$this->assertEquals($active_backend->name, 'Amazon S3');
 	}
 	
 }
+	*/
+

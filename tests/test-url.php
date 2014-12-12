@@ -28,7 +28,7 @@ class UrlTest extends WP_UnitTestCase {
 
 	function testUploadDirFilterShouldReturnProperDataIfThereIsABackend() {
 
-		wpro()->options->set('wpro-service', 'Amazon S3');
+		wpro()->backends->activate_backend('Amazon S3');
 
 		// Only subdir and baseurl needed:
 		$result = wpro()->url->upload_dir(array(
@@ -41,7 +41,7 @@ class UrlTest extends WP_UnitTestCase {
 		$this->assertStringEndsWith($result['subdir'], $result['path']);
 		$this->assertStringEndsWith($result['subdir'], $result['url']);
 
-		wpro()->options->set('wpro-service', '');
+		wpro()->backends->deactivate_backend();
 
 	}
 

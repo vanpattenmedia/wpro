@@ -7,16 +7,18 @@ class WPRO_Options {
 	private $option_keys = array(
 		'wpro-service',
 		'wpro-folder',
-		'wpro-tempdir',
-		'wpro-ftp-server',
-		'wpro-ftp-user',
-		'wpro-ftp-password',
-		'wpro-ftp-pasvmode',
-		'wpro-ftp-webroot'
+		'wpro-tempdir'
 	);
 
 	function __construct() {
 		add_action('init', array($this, 'init')); // Register the settings.
+	}
+
+	function deregister($option) {
+		if (($key = array_search($option, $this->option_keys)) !== false) {
+			unset($this->option_keys[$key]);
+			//delete_site_option($option);
+		}
 	}
 
 	function get($option, $default = false) {
