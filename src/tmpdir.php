@@ -8,11 +8,14 @@ class WPRO_TmpDir {
 	public $cleanUpDirs = []; // Temporary directories to remove at shutdown.
 
 	function __construct() {
+		$log = wpro()->debug->logblock('WPRO_TmpDir::__construct()');
 		add_filter('shutdown', array($this, 'cleanUp')); // Remove temporary directory
+		return $log->logreturn(true);
 	}
 
 	// Returns the system temporary dir, or any temporary dir we may be able to use:
 	function sysTmpDir() {
+		$log = wpro()->debug->logblock('WPRO_TmpDir::sysTmpDir()');
 
 		$tmp = wpro()->options->get('wpro-tempdir');
 
@@ -29,19 +32,21 @@ class WPRO_TmpDir {
 
 		if (substr($tmp, -1) == '/') $tmp = substr($tmp, 0, -1);
 
-		return $tmp;
+		return $log->logreturn($tmp);
 	}
 
 	// temporary directory for this request only:
 	function reqTmpDir() {
-		if ($this->reqTmpDirCache !== '.') return $this->reqTmpDirCache;
+		$log = wpro()->debug->logblock('WPRO_TmpDir::reqTmpDir()');
+		if ($this->reqTmpDirCache !== '.') return $log->logreturn($this->reqTmpDirCache);
 		while (is_dir($this->reqTmpDirCache)) $this->reqTmpDirCache = $this->sysTmpDir() . '/wpro' . time() . rand(0, 999999);
 		$this->cleanUpDirs[] = $this->reqTmpDirCache;
-		return $this->reqTmpDirCache;
+		return $log->logreturn($this->reqTmpDirCache);
 
 	}
 
 	function rmdirRecursive($dir) {
+		$log = wpro()->debug->logblock('WPRO_TmpDir::rmdirRecursive()');
 		$files = array_diff(scandir($dir), array('.', '..'));
 		foreach ($files as $file) {
 			if (is_dir($dir .'/' . $file)) {
@@ -50,15 +55,17 @@ class WPRO_TmpDir {
 				unlink($dir . '/' . $file);
 			}
 		}
-		return rmdir($dir);
+		return $log->logreturn(rmdir($dir));
 	}
 
 	function cleanUp() {
+		$log = wpro()->debug->logblock('WPRO_TmpDir::cleanUp()');
 		foreach ($this->cleanUpDirs as $tmpDir) {
 			if (is_dir($tmpDir)) {
 				$this->rmdirRecursive($tmpDir);
 			}
 		}
+		return $log->logreturn(true);
 	}
 
 }

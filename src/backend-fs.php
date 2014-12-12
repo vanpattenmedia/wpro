@@ -7,13 +7,18 @@ class WPRO_Backend_Filesystem {
 	const NAME = 'Custom Filesystem Path';
 
 	function activate() {
+		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::activate()');
+
 		wpro()->options->register('wpro-fs-path');
 
 		add_filter('wpro_backend_handle_upload', array($this, 'handle_upload'));
 		add_filter('wpro_backend_retrieval_baseurl', array($this, 'url'));
+
+		return $log->logreturn(true);
 	}
 
 	function admin_form() {
+		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::admin_form()');
 		?>
 			<h3><?php echo(self::NAME); ?></h3>
 			<p class="description">
@@ -29,40 +34,50 @@ class WPRO_Backend_Filesystem {
 				</tr>
 			</table>
 		<?php
+		return $log->logreturn(true);
 	}
 
 	function handle_upload($data) {
+		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::handle_upload()');
+
 		$file = $data['file'];
 		$url = $data['url'];
 		$mime = $data['type'];
 
-		wpro()->debug->log('WPROS3::upload("' . $file . '", "' . $url . '", "' . $mime . '");');
+		wpro()->debug->logblock('WPROS3::upload("' . $file . '", "' . $url . '", "' . $mime . '");');
 		$url = wpro()->url->normalize($url);
 		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $url, $regs)) return false;
 		$url = $regs[3];
 
-		if (!file_exists($file)) return false;
+		if (!file_exists($file)) return $log->logreturn(false);
 
 		$path = rtrim(wpro()->options->get('wpro-fs-path'), '/') . '/' . trim($url, '/');
 
 		if (!is_dir(dirname($path))) mkdir(dirname($path), 0777, true);
-		if (!is_dir(dirname($path))) return false;
+		if (!is_dir(dirname($path))) return $log->logreturn(false);
 
 		return rename($file, $path);
 
-		return true;
+		return $log->logreturn(true);
 	}
 
 	function deactivate() {
+		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::deactivate()');
+
 		wpro()->options->deregister('wpro-fs-path');
 
 		remove_filter('wpro_backend_handle_upload', array($this, 'handle_upload'));
 		remove_filter('wpro_backend_retrieval_baseurl', array($this, 'url'));
+
+		return $log->logreturn(true);
 	}
 
 	function url($value) {
+		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::url()');
+
 		$url = admin_url('admin-ajax.php?action=wpro&file=');
-		return $url;
+
+		return $log->logreturn($url);
 	}
 		
 

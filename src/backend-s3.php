@@ -7,6 +7,8 @@ class WPRO_Backend_S3 {
 	const NAME = 'Amazon S3';
 
 	function activate() {
+		$log = wpro()->debug->logblock('WPRO_Backend_S3::activate()');
+
 		wpro()->options->register('wpro-aws-key');
 		wpro()->options->register('wpro-aws-secret');
 		wpro()->options->register('wpro-aws-bucket');
@@ -17,9 +19,13 @@ class WPRO_Backend_S3 {
 
 		add_filter('wpro_backend_handle_upload', array($this, 'handle_upload'));
 		add_filter('wpro_backend_retrieval_baseurl', array($this, 'url'));
+
+		return $log->logreturn(true);
 	}
 
 	function admin_form() {
+		$log = wpro()->debug->logblock('WPRO_Backend_S3::admin_form()');
+
 		?>
 			<h3><?php echo(self::NAME); ?></h3>
 			<table class="form-table">
@@ -49,34 +55,34 @@ class WPRO_Backend_S3 {
 				</tr>
 			</table>
 		<?php
+		return $log->logreturn(true);
 	}
 
 	function handle_upload($data) {
+		$log = wpro()->debug->logblock('WPRO_Backend_S3::handle_upload()');
+
 		$file = $data['file'];
 		$url = $data['url'];
 		$mime = $data['type'];
 
-		wpro()->debug->log('WPROS3::upload("' . $file . '", "' . $url . '", "' . $mime . '");');
+		wpro()->debug->logblock('WPROS3::upload("' . $file . '", "' . $url . '", "' . $mime . '");');
 		$url = $this->wpro()->url->normalize($url);
-		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $url, $regs)) return false;
+		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $url, $regs)) return $log->logreturn(false);
 		$url = $regs[3];
 
-		if (!file_exists($file)) return false;
+		if (!file_exists($file)) return $log->logreturn(false);
 		$this->removeTemporaryLocalData($file);
 
 		$fin = fopen($file, 'r');
-		if (!$fin) return false;
+		if (!$fin) return $log->logreturn(false);
 
 		$fout = fsockopen($this->endpoint, 80, $errno, $errstr, 30);
-		if (!$fout) return false;
+		if (!$fout) return $log->logreturn(false);
 		$datetime = gmdate('r');
 		$string2sign = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . $url;
 
-		wpro()->debug->log('STRING TO SIGN:');
-		wpro()->debug->log($string2sign);
 		$debug = '';
 		for ($i = 0; $i < strlen($string2sign); $i++) $debug .= dechex(ord(substr($string2sign, $i, 1))) . ' ';
-		wpro()->debug->log($debug);
 
 		// Todo: Make this work with php cURL instead of fsockopen/etc..
 
@@ -89,22 +95,16 @@ class WPRO_Backend_S3 {
 		$query .= "Date: " . $datetime . "\n";
 		$query .= "Authorization: AWS " . $this->key . ":" . $this->amazon_hmac($string2sign) . "\n\n";
 
-		wpro()->debug->log('SEND:');
-		wpro()->debug->log($query);
-
 		fwrite($fout, $query);
 		while (feof($fin) === false) fwrite($fout, fread($fin, 8192));
 		fclose($fin);
 
 		// Get the amazon response:
-		wpro()->debug->log('RECEIVE:');
 		$response = '';
 		while (!feof($fout)) {
 			$data = fgets($fout, 256);
-			wpro()->debug->log($data);
 			$response .= $data;
 			if (strpos($response, "\r\n\r\n") !== false) { // Header fully returned.
-				wpro()->debug->log('ALL RESPONSE HEADERS RECEIVED.');
 				if (strpos($response, 'Content-Length: 0') !== false) break; // Return if Content-Length: 0 (and header is fully returned)
 				if (substr($response, -7) == "\r\n0\r\n\r\n") break; // Keep-alive responses does not return EOF, they end with this string.
 			}
@@ -112,21 +112,25 @@ class WPRO_Backend_S3 {
 
 		fclose($fout);
 
-		if (strpos($response, '<Error>') !== false) return false;
+		if (strpos($response, '<Error>') !== false) return $log->logreturn(false);
 
-		return true;
+		return $log->logreturn(true);
 	}
 
 	function amazon_hmac($string) {
-		return base64_encode(extension_loaded('hash') ?
+		$log = wpro()->debug->logblock('WPRO_Backend_S3::amazon_hmac()');
+
+		return $log->logreturn(base64_encode(extension_loaded('hash') ?
 		hash_hmac('sha1', $string, $this->secret, true) : pack('H*', sha1(
 		(str_pad($this->secret, 64, chr(0x00)) ^ (str_repeat(chr(0x5c), 64))) .
 		pack('H*', sha1((str_pad($this->secret, 64, chr(0x00)) ^
-		(str_repeat(chr(0x36), 64))) . $string)))));
+		(str_repeat(chr(0x36), 64))) . $string))))));
 	}
 
 
 	function deactivate() {
+		$log = wpro()->debug->logblock('WPRO_Backend_S3::deactivate()');
+
 		wpro()->options->deregister('wpro-aws-key');
 		wpro()->options->deregister('wpro-aws-secret');
 		wpro()->options->deregister('wpro-aws-bucket');
@@ -137,9 +141,13 @@ class WPRO_Backend_S3 {
 
 		remove_filter('wpro_backend_handle_upload', array($this, 'handle_upload'));
 		remove_filter('wpro_backend_retrieval_baseurl', array($this, 'url'));
+
+		return $log->logreturn(true);
 	}
 
 	function url($value) {
+		$log = wpro()->debug->logblock('WPRO_Backend_S3::url()');
+
 		$protocol = 'http';
 		if (wpro()->options->get('wpro-aws-ssl')) {
 			$protocol = 'https';
@@ -157,7 +165,7 @@ class WPRO_Backend_S3 {
 			$url = $protocol . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-endpoint') . '/' . wpro()->options->get('wpro-aws-bucket') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
 		}
 
-		return $url;
+		return $log->logreturn($url);
 	}
 		
 

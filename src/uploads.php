@@ -5,6 +5,8 @@ if (!defined('ABSPATH')) exit();
 class WPRO_Uploads {
 
 	function __construct() {
+		$log = wpro()->debug->logblock('WPRO_Uploads::__construct()');
+
 		add_filter('wp_handle_upload', array($this, 'handle_upload'));
 		add_filter('wp_generate_attachment_metadata', array($this, 'generate_attachment_metadata')); // We use this filter to store resized versions of the images.
 		add_filter('wp_update_attachment_metadata', array($this, 'update_attachment_metadata')); // We use this filter to store resized versions of the images.
@@ -14,15 +16,14 @@ class WPRO_Uploads {
 		add_filter('wp_save_image_editor_file', array($this, 'save_image_file'), 10, 5);
 		add_filter('wp_upload_bits', array($this, 'upload_bits')); // On XMLRPC uploads, files arrives as strings, which we are handling in this filter.
 		add_filter('wp_handle_upload_prefilter', array($this, 'handle_upload_prefilter')); // This is where we check for filename dupes (and change them to avoid overwrites).
+
+		return $log->logreturn(true);
 	}
 
 	function exists($path) {
-
-		wpro()->debug->log('WPRO_Uploads::exists("' . $path . '");');
+		$log = wpro()->debug->logblock('WPRO_Uploads::exists()');
 
 		$path = $this->wpro()->url->normalize($path);
-
-		wpro()->debug->log('-> testing url: ' . $path);
 
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_NOBODY, 1);
@@ -30,16 +31,16 @@ class WPRO_Uploads {
 		$result = trim(curl_exec_follow($ch));
 
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		wpro()->debug->log('-> http return code: ' . $httpCode);
 
-		if ($httpCode != 200) return false;
+		if ($httpCode != 200) return $log->logreturn(false);
 
-		return true;
+		return $log->logreturn(true);
 	}
 
 	function generate_attachment_metadata($data) {
-		wpro()->debug->log('WPRO::generate_attachment_metadata();');
-		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
+		$log = wpro()->debug->logblock('WPRO_Uploads::generate_attachment_metadata()');
+
+		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $log->logreturn($data);
 
 		$upload_dir = wp_upload_dir();
 		$filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
@@ -63,10 +64,11 @@ class WPRO_Uploads {
 			$this->backend->upload($file, $url, $mime);
 		}
 
-		return $data;
+		return $log->logreturn($data);
 	}
 
 	function handle_upload($data) {
+		$log = wpro()->debug->logblock('WPRO_Uploads::handle_upload()');
 
 		$data['url'] = wpro()->url->normalize($data['url']);
 		if (!file_exists($data['file'])) return false; //TODO: Test what is happening in this situation.
@@ -77,16 +79,13 @@ class WPRO_Uploads {
 		// One thing has changed here. Previously, we returned false from this function, when upload failed.
 		// TODO: Check what is happening here on failing uploads.
 
-		return $data;
+		return $log->logreturn($data);
 	}
 
 	// Handle duplicate filenames:
 	// Wordpress never calls the wp_handle_upload_overrides filter properly, so we do not have any good way of setting a callback for wp_unique_filename_callback, which would be the most beautiful way of doing this. So, instead we are usting the wp_handle_upload_prefilter to check for duplicates and rename the files...
 	function handle_upload_prefilter($file) {
-
-		wpro()->debug->log('WPRO::handle_upload_prefilter($file);');
-		wpro()->debug->log('-> $file = ');
-		wpro()->debug->log(print_r($file, true));
+		$log = wpro()->debug->logblock('WPRO_Uploads::handle_upload_prefilter()');
 
 		$upload = wp_upload_dir();
 
@@ -108,13 +107,12 @@ class WPRO_Uploads {
 
 		$file['name'] = $name;
 
-		return $file;
+		return $log->logreturn($file);
 	}
 
 
 	function load_image_to_edit_path($filepath) {
-
-		wpro()->debug->log('WPRO::load_image_to_edit_path("' . $filepath . '");');
+		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_edit_path()');
 
 		if (substr($filepath, 0, 7) == 'http://' || substr($filepath, 0, 8) == 'https://') {
 
@@ -125,9 +123,6 @@ class WPRO_Uploads {
 			while (file_exists($tmpfile)) $tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
 
 			$filepath = $this->wpro()->url->normalize($filepath);
-
-			wpro()->debug->log('-> Loading file from: ' . $filepath);
-			wpro()->debug->log('-> Storing file at: ' . $tmpfile);
 
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $filepath);
@@ -140,24 +135,20 @@ class WPRO_Uploads {
 
 			$this->removeTemporaryLocalData($tmpfile);
 
-			return $tmpfile;
+			return $log->logreturn($tmpfile);
 
 		}
-		return $filepath;
+		return $log->logreturn($filepath);
 	}
 
 	function load_image_to_local_path($filepath, $attachment_id) {
-
-		wpro()->debug->log('WPRO::load_image_to_local_path("' . $filepath . '");');
+		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_local_path()');
 
 		$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', wp_get_attachment_url( $attachment_id ), $attachment_id, 'full' );
 
 		if (substr($fileurl, 0, 7) == 'http://') {
 
 			$fileurl = $this->wpro()->url->normalize($fileurl);
-
-			wpro()->debug->log('-> Loading file from: ' . $fileurl);
-			wpro()->debug->log('-> Storing file at: ' . $filepath);
 
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $fileurl);
@@ -170,24 +161,21 @@ class WPRO_Uploads {
 
 			$this->removeTemporaryLocalData($filepath);
 
-			return $filepath;
+			return $log->logreturn($filepath);
 
 		}
-		return $filepath;
+		return $log->logreturn($filepath);
 	}
 
 	function save_image_file($dummy, $filename, $image, $mime_type, $post_id) {
+		$log = wpro()->debug->logblock('WPRO_Uploads::save_image_file()');
 
-		wpro()->debug->log('WPRO::save_image_file("' . $filename . '", "' . $mime_type . '", "' . $post_id . '");');
-
-
-		if (substr($filename, 0, strlen($this->tempdir)) != $this->tempdir) return false;
+		if (substr($filename, 0, strlen($this->tempdir)) != $this->tempdir) return $log->logreturn(false);
 		$tmpfile = substr($filename, strlen($this->tempdir));
-		if (!preg_match('/^wpro[0-9]+(\/.+)$/', $tmpfile, $regs)) return false;
+		if (!preg_match('/^wpro[0-9]+(\/.+)$/', $tmpfile, $regs)) return $log->logreturn(false);
 
 		$tmpfile = $regs[1];
 
-		wpro()->debug->log('-> Storing image as temporary file: ' . $filename);
 		$image->save($filename, $mime_type);
 
 		$upload = wp_upload_dir();
@@ -196,13 +184,13 @@ class WPRO_Uploads {
 		while (substr($tmpfile, 0, 1) == '/') $tmpfile = substr($tmpfile, 1);
 		$url .= $tmpfile;
 
-		return $this->backend->upload($filename, $this->wpro()->url->normalize($url), $mime_type);
+		return $log->logreturn($this->backend->upload($filename, $this->wpro()->url->normalize($url), $mime_type));
 
 	}
 
 	function update_attachment_metadata($data) {
-		wpro()->debug->log('WPRO::update_attachment_metadata();');
-		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
+		$log = wpro()->debug->logblock('WPRO_Uploads::update_attachment_metadata()');
+		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $log->logreturn($data);
 		$upload_dir = wp_upload_dir();
 		$filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
 		foreach ($data['sizes'] as $size => $sizedata) {
@@ -223,14 +211,11 @@ class WPRO_Uploads {
 
 			$this->backend->upload($file, $url, $mime);
 		}
-		return $data;
+		return $log->logreturn($data);
 	}
 
 	function upload_bits($data) {
-
-		wpro()->debug->log('WPRO::upload_bits($data);');
-		wpro()->debug->log('-> $data = ');
-		wpro()->debug->log(print_r($data, true));
+		$log = wpro()->debug->logblock('WPRO_Uploads::upload_bits()');
 
 		$ending = '';
 		if (preg_match('/\.([^\.\/]+)$/', $data['name'], $regs)) $ending = '.' . $regs[1];
@@ -244,11 +229,11 @@ class WPRO_Uploads {
 
 		$upload = wp_upload_dir();
 
-		return array(
+		return $log->logreturn(array(
 			'file' => $tmpfile,
 			'url' => $this->wpro()->url->normalize($upload['url'] . '/' . $data['name']),
 			'error' => false
-		);
+		));
 	}
 
 

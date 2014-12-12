@@ -7,6 +7,7 @@ if (!defined('ABSPATH')) exit();
 class WPRO_Debug {
 
 	var $debug_cache;
+	var $indentation;
 	
 	function __construct() {
 		$this->clean_debug_cache();
@@ -20,12 +21,24 @@ class WPRO_Debug {
 		return in_array(trim($str), $this->debug_cache);
 	}
 
+	function logblock($msg) {
+		$this->log($msg);
+		$this->indentation++;
+		return $this;
+	}
+
+	function logreturn($value) {
+		$this->log('return: ' . var_export($value, true));
+		$this->indentation--;
+		return $value;
+	}
+
 	function log($msg) {
 
 		$this->debug_cache[] = trim($msg);
 
 		if (defined('WPRO_DEBUG') && WPRO_DEBUG) {
-			error_log($msg);
+			error_log(str_repeat("\t", $this->indentation) . trim($msg));
 		}
 	}
 

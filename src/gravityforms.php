@@ -3,11 +3,13 @@
 class WPRO_Gravityforms {
 
 	function __construct() {
+		$log = wpro()->debug->logblock('WPRO_Gravityforms::__construct()');
 		add_action('gform_after_submission', array($this, 'gravityforms_after_submission'), 10, 2);
+		return $log->logreturn(true);
 	}
 
 	function gravityforms_after_submission($entry, $form) {
-		wpro()->debug->log('WPRO::gravityforms_after_submission($entry, $form);');
+		$log = wpro()->debug->logblock('WPRO_Gravityforms::gravityforms_after_submission()');
 
 		$upload_dir = wp_upload_dir();
 		foreach($form['fields'] as $field) {
@@ -20,10 +22,11 @@ class WPRO_Gravityforms {
 					$mime = wp_check_filetype($file_to_upload);
 
 					$response = $this->backend->upload($file_to_upload, $url, $mime['type']);
-					if (!$response) return false;
+					if (!$response) return $log->logreturn(false);
 				}
 			}
 		}
+		return $log->logreturn(true);
 	}
 }
 

@@ -5,14 +5,19 @@ if (!defined('ABSPATH')) exit();
 class WPRO_Admin {
 
 	function __construct() {
+		$log = wpro()->debug->logblock('WPRO_Admin::__construct()');
 
 		if (!defined('WPRO_ON') || !WPRO_ON) { // Settings in constants. Don't show admin.
 			add_action('init', array($this, 'admin_init'));
 
 		}
+
+		return $log->logreturn(true);
 	}
 
 	function admin_form() {
+		$log = wpro()->debug->logblock('WPRO_Admin::admin_form()');
+
 		if (!$this->is_trusted()) {
 			wp_die ( __ ('You do not have sufficient permissions to access this page.'));
 		}
@@ -85,10 +90,12 @@ class WPRO_Admin {
 				</form>
 			</div>
 		<?php
+		return $log->logreturn(true);
 	}
 
 
 	function admin_init() {
+		$log = wpro()->debug->logblock('WPRO_Admin::admin_init()');
 
 		wp_enqueue_script('wpro_admin', plugins_url('/wpro/js/admin.js'), array('jquery'));
 
@@ -100,13 +107,18 @@ class WPRO_Admin {
 			}
 			add_action('admin_post_wpro_settings_POST', array($this, 'admin_post')); // Gets called from plugin admin page POST request.
 		}
+		return $log->logreturn(true);
 	}
 
 	function admin_menu() {
+		$log = wpro()->debug->logblock('WPRO_Admin::admin_menu()');
+
 		add_options_page('WPRO Plugin Settings', 'WPRO Settings', 'manage_options', 'wpro', array($this, 'admin_form'));
+		return $log->logreturn(true);
 	}
 
 	function admin_post() {
+		$log = wpro()->debug->logblock('WPRO_Admin::admin_post()');
 		// We are handling the POST settings stuff ourselves, instead of using the Settings API.
 		// This is because the Settings API has no way of storing network wide options in multisite installs.
 		if (!$this->is_trusted()) return false;
@@ -125,20 +137,25 @@ class WPRO_Admin {
 	}
 
 	function is_trusted() {
+		$log = wpro()->debug->logblock('WPRO_Admin::is_trusted()');
+
 		if (is_multisite()) {
 			if (is_super_admin()) {
-				return true;
+				return $log->logreturn(true);
 			}
 		} else {
 			if (current_user_can('manage_options')) {
-				return true;
+				return $log->logreturn(true);
 			}
 		}
 		return false;
 	}
 
 	function network_admin_menu() {
+		$log = wpro()->debug->logblock('WPRO_Admin::network_admin_menu()');
+
 		add_submenu_page('settings.php', 'WPRO Plugin Settings', 'WPRO Settings', 'manage_options', 'wpro', array($this, 'admin_form'));
+		return $log->logreturn(true);
 	}
 
 }

@@ -22,10 +22,11 @@ class WPRO_Core {
 			require_once($file);
 		}
 
+		$this->debug = new WPRO_Debug();
+
 		$this->admin = new WPRO_Admin();
 		$this->backends = new WPRO_Backends();
 		$this->cdn = new WPRO_CDN();
-		$this->debug = new WPRO_Debug();
 		$this->options = new WPRO_Options();
 		$this->tmpdir = new WPRO_TmpDir();
 		$this->uploads = new WPRO_Uploads();
