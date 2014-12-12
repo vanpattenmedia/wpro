@@ -25,10 +25,6 @@ class WPRO_Backend_Filesystem {
 					<th scope="row">Filesystem Path</th>
 					<td>
 						<input type="text" name="wpro-fs-path" />
-						<p class="description">
-							The path must exist.
-							We will not create it for you.
-						</p>
 					</td>
 				</tr>
 			</table>
@@ -109,23 +105,7 @@ class WPRO_Backend_Filesystem {
 	}
 
 	function url($value) {
-		$protocol = 'http';
-		if (wpro()->options->get('wpro-aws-ssl')) {
-			$protocol = 'https';
-		}
-
-		# this needs some more testing, but it seems like we have to use the
-		# virtual-hosted-style for US Standard region, and the path-style
-		# for region-specific endpoints:
-		# (however we used the virtual-hosted style for everything before,
-		# and that did work, so something has changed at amazons end.
-		# is there any difference between old and new buckets?)
-		if (wpro()->options->get('wpro-aws-endpoint') == 's3.amazonaws.com') {
-			$url = $protocol . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro()->options->get('wpro-folder'))), '/');
-		} else {
-			$url = $protocol . '://' . trim(str_replace('//', '/', wpro()->options->get('wpro-aws-endpoint') . '/' . wpro()->options->get('wpro-aws-bucket') . '/' . trim(wpro()->options->get('wpro-folder'))), '/');
-		}
-
+		$url = admin_url('admin-ajax.php?action=wpro&file=');
 		return $url;
 	}
 		
