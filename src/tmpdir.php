@@ -5,6 +5,7 @@ if (!defined('ABSPATH')) exit();
 class WPRO_TmpDir {
 
 	private $reqTmpDirCache = '.';
+	public $cleanUpDirs = []; // Temporary directories to remove at shutdown.
 
 	function __construct() {
 		add_filter('shutdown', array($this, 'cleanUp')); // Remove temporary directory
@@ -35,6 +36,7 @@ class WPRO_TmpDir {
 	function reqTmpDir() {
 		if ($this->reqTmpDirCache !== '.') return $this->reqTmpDirCache;
 		while (is_dir($this->reqTmpDirCache)) $this->reqTmpDirCache = $this->sysTmpDir() . '/wpro' . time() . rand(0, 999999);
+		$this->cleanUpDirs[] = $this->reqTmpDirCache;
 		return $this->reqTmpDirCache;
 
 	}
@@ -52,8 +54,10 @@ class WPRO_TmpDir {
 	}
 
 	function cleanUp() {
-		if (is_dir($this->reqTmpDir())) {
-			$this->rmdirRecursive($this->reqTmpDir());
+		foreach ($this->cleanUpDirs as $tmpDir) {
+			if (is_dir($tmpDir)) {
+				$this->rmdirRecursive($tmpDir);
+			}
 		}
 	}
 

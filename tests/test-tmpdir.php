@@ -40,5 +40,15 @@ class TmpDirTest extends WP_UnitTestCase {
 		$this->assertEquals($noOptSysTmpDir, wpro()->tmpdir->sysTmpDir());
 	}
 
+	function testCleanUpTempDirectories() {
+		$tmpfname = tempnam('/tmp', 'FOO');
+		unlink($tmpfname);
+		mkdir($tmpfname);
+		$this->assertTrue(is_dir($tmpfname));
+		wpro()->tmpdir->cleanUpDirs[] = $tmpfname;
+		wpro()->tmpdir->cleanUp();
+		$this->assertFalse(is_dir($tmpfname));
+	}
+
 }
 
