@@ -81,6 +81,22 @@ Those are the AWS endpoints:
 *	`s3-ap-northeast-1.amazonaws.com` - Asia Pacific (Tokyo) Region
 *	`s3-sa-east-1.amazonaws.com` - South America (Sao Paulo) Region
 
+## Adding backends ##
+
+You can extend the WPRO functionality by registering your own backend, in
+your theme's function.php or in another plugin. Just wait for the
+wpro_setup_backends action to happen, and then wpro()->backends->register(...);
+Something like this:
+
+	class MyBackend {
+		...
+	}
+	$my_backend = new MyBackend();
+	function add_my_backend() {
+		wpro()->backends->register($my_backend);
+	}
+	add_action('wpro_setup_backends', 'add_my_backend');
+
 ## Frequently Asked Questions ##
 
 ### Will this plugin work in Wordpress MU/Multisite environments? ###
@@ -115,7 +131,8 @@ http://www.gnu.org/licenses/gpl-2.0.html
 ### Do you like beer? ###
 
 If we meet some day, and you think this stuff is worth it, you may buy
-me some wine (due to my gluten free diet) in return. (GPLv2 still applies.)
+me a gluten free beer (or a glass of red wine) in return.
+(GPLv2 still applies.)
 
 ## Changelog ##
 
@@ -173,5 +190,4 @@ Todo list:
 *	Is CURLOPT_FOLLOWLOCATION still a problem? Test it.
 *	Make sure we are tagging the versions in the git repo properly. Also check out: https://getcomposer.org/doc/articles/aliases.md under "branch alias".
 *	At unsuccessful upload, an attachment is still created in the wp database. Thats wrong.
-
 

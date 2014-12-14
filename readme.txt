@@ -121,6 +121,7 @@ If you define the constant WPRO_DEBUG in your wp-config.php, then
 some debug data will be written to your PHP error log.
 
 There is a Makefile, which will help you to run the unit tests.
+Note: You need [composer](https://getcomposer.org/ "composer") to do the unit testing.
 
 = What about the license? =
 
@@ -188,4 +189,4 @@ Todo list:
 *	Custom header images does not work. I guess this is unfixable?
 *	Is CURLOPT_FOLLOWLOCATION still a problem? Test it.
 *	Make sure we are tagging the versions in the git repo properly. Also check out: https://getcomposer.org/doc/articles/aliases.md under "branch alias".
-
+*	At unsuccessful upload, an attachment is still created in the wp database. Thats wrong.
