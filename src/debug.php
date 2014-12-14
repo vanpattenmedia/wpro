@@ -38,7 +38,9 @@ class WPRO_Debug {
 		$this->debug_cache[] = trim($msg);
 
 		if (defined('WPRO_DEBUG') && WPRO_DEBUG) {
-			error_log(str_repeat("\t", $this->indentation) . trim($msg));
+			foreach (explode("\n", $msg) as $msg) {
+				error_log(str_repeat('  ', $this->indentation) . $msg);
+			}
 		}
 	}
 
