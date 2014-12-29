@@ -120,6 +120,10 @@ And, plz, use tabs for indenting! :)
 If you define the constant WPRO_DEBUG in your wp-config.php, then
 some debug data will be written to your PHP error log.
 
+This is how I check me logs (just a tip):
+
+	sudo stdbuf -oL -eL tail -f /var/log/apache2/wpro-error.log | stdbuf -oL -eL sed -r 's/^[^]]+][^]]+][^]]+][^]]+]//' | sed -r 's/, referer: [^ ]+$//'
+
 There is a Makefile, which will help you to run the unit tests.
 Note: You need [composer](https://getcomposer.org/ "composer") to do the unit testing.
 
