@@ -155,31 +155,29 @@ class WPRO_Uploads {
 
 	function load_image_to_local_path($filepath, $attachment_id) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_local_path($filepath = "' . $filepath . '", $attachment_id = ' . $attachment_id . ')');
-		if (wpro()->backends->is_backend_activated()) {
 
-			$attachment_url = wp_get_attachment_url( $attachment_id );
-			$log->log('$attachment_url = "' . $attachment_url . '"');
-			$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', $attachment_url, $attachment_id, 'full' );
-			$log->log('$fileurl = "' . $fileurl . '"');
+		$attachment_url = wp_get_attachment_url( $attachment_id );
+		$log->log('$attachment_url = "' . $attachment_url . '"');
+		$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', $attachment_url, $attachment_id, 'full' );
+		$log->log('$fileurl = "' . $fileurl . '"');
 
-			if (substr($fileurl, 0, 7) == 'http://') {
+		if (substr($fileurl, 0, 7) == 'http://') {
 
-				$fileurl = $this->wpro()->url->normalize($fileurl);
+			$fileurl = wpro()->url->normalize($fileurl);
 
-				$ch = curl_init();
-				curl_setopt($ch, CURLOPT_URL, $fileurl);
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-				curl_setopt($ch, CURLOPT_AUTOREFERER, true);
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $fileurl);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_AUTOREFERER, true);
 
-				$fh = fopen($filepath, 'w');
-				fwrite($fh, curl_exec_follow($ch));
-				fclose($fh);
+			$fh = fopen($filepath, 'w');
+			fwrite($fh, curl_exec_follow($ch));
+			fclose($fh);
 
-				$this->removeTemporaryLocalData($filepath);
+			//$this->removeTemporaryLocalData($filepath);
 
-				return $log->logreturn($filepath);
+			return $log->logreturn($filepath);
 
-			}
 		}
 
 		return $log->logreturn($filepath);
@@ -239,6 +237,7 @@ class WPRO_Uploads {
 
 	function upload_bits($data) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::upload_bits()');
+		if (!wpro()->backends->is_backend_activated()) return $log->logreturn($data);
 
 		$ending = '';
 		if (preg_match('/\.([^\.\/]+)$/', $data['name'], $regs)) $ending = '.' . $regs[1];
