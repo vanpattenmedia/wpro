@@ -40,28 +40,32 @@ class WPRO_Uploads {
 	function generate_attachment_metadata($data) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::generate_attachment_metadata()');
 
-		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $log->logreturn($data);
+		if (wpro()->backends->is_backend_activated()) {
 
-		$upload_dir = wp_upload_dir();
-		$filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
-		foreach ($data['sizes'] as $size => $sizedata) {
-			$file = $filepath . $sizedata['file'];
-			$url = $upload_dir['baseurl'] . substr($file, strlen($upload_dir['basedir']));
+			if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $log->logreturn($data);
 
-			$mime = 'application/octet-stream';
-			switch(substr($file, -4)) {
-				case '.gif':
-					$mime = 'image/gif';
-					break;
-				case '.jpg':
-					$mime = 'image/jpeg';
-					break;
-				case '.png':
-					$mime = 'image/png';
-					break;
+			$upload_dir = wp_upload_dir();
+			$filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
+			foreach ($data['sizes'] as $size => $sizedata) {
+				$file = $filepath . $sizedata['file'];
+				$url = $upload_dir['baseurl'] . substr($file, strlen($upload_dir['basedir']));
+
+				$mime = 'application/octet-stream';
+				switch(substr($file, -4)) {
+					case '.gif':
+						$mime = 'image/gif';
+						break;
+					case '.jpg':
+						$mime = 'image/jpeg';
+						break;
+					case '.png':
+						$mime = 'image/png';
+						break;
+				}
+
+				$this->backend->upload($file, $url, $mime);
 			}
 
-			$this->backend->upload($file, $url, $mime);
 		}
 
 		return $log->logreturn($data);
@@ -70,14 +74,18 @@ class WPRO_Uploads {
 	function handle_upload($data) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::handle_upload()');
 
-		$data['url'] = wpro()->url->normalize($data['url']);
-		if (!file_exists($data['file'])) return false; //TODO: Test what is happening in this situation.
+		if (wpro()->backends->is_backend_activated()) {
 
-		$response = wpro()->backends->active_backend()->upload($data['file'], $data['url'], $data['type']);
-		$data = apply_filters('wpro_backend_handle_upload', $data);
+			$data['url'] = wpro()->url->normalize($data['url']);
+			if (!file_exists($data['file'])) return false; //TODO: Test what is happening in this situation.
 
-		// One thing has changed here. Previously, we returned false from this function, when upload failed.
-		// TODO: Check what is happening here on failing uploads.
+			$response = wpro()->backends->active_backend()->upload($data['file'], $data['url'], $data['type']);
+			$data = apply_filters('wpro_backend_handle_upload', $data);
+
+			// One thing has changed here. Previously, we returned false from this function, when upload failed.
+			// TODO: Check what is happening here on failing uploads.
+
+		}
 
 		return $log->logreturn($data);
 	}
@@ -87,25 +95,29 @@ class WPRO_Uploads {
 	function handle_upload_prefilter($file) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::handle_upload_prefilter()');
 
-		$upload = wp_upload_dir();
+		if (wpro()->backends->is_backend_activated()) {
 
-		$name = $file['name'];
-		$path = trim($upload['url'], '/') . '/' . $name;
+			$upload = wp_upload_dir();
 
-		$counter = 0;
-		while ($this->backend->file_exists($path)) {
-			if (preg_match('/\.([^\.\/]+)$/', $file['name'], $regs)) {
-				$ending = '.' . $regs[1];
-				$preending = substr($file['name'], 0, 0 - strlen($ending));
-				$name = $preending . '_' . $counter . $ending;
-			} else {
-				$name = $file['name'] . '_' . $counter;
-			}
+			$name = $file['name'];
 			$path = trim($upload['url'], '/') . '/' . $name;
-			$counter++;
-		}
 
-		$file['name'] = $name;
+			$counter = 0;
+			while (wpro()->backends->active_backend->file_exists($path)) {
+				if (preg_match('/\.([^\.\/]+)$/', $file['name'], $regs)) {
+					$ending = '.' . $regs[1];
+					$preending = substr($file['name'], 0, 0 - strlen($ending));
+					$name = $preending . '_' . $counter . $ending;
+				} else {
+					$name = $file['name'] . '_' . $counter;
+				}
+				$path = trim($upload['url'], '/') . '/' . $name;
+				$counter++;
+			}
+
+			$file['name'] = $name;
+
+		}
 
 		return $log->logreturn($file);
 	}
@@ -142,28 +154,34 @@ class WPRO_Uploads {
 	}
 
 	function load_image_to_local_path($filepath, $attachment_id) {
-		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_local_path()');
+		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_local_path($filepath = "' . $filepath . '", $attachment_id = ' . $attachment_id . ')');
+		if (wpro()->backends->is_backend_activated()) {
 
-		$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', wp_get_attachment_url( $attachment_id ), $attachment_id, 'full' );
+			$attachment_url = wp_get_attachment_url( $attachment_id );
+			$log->log('$attachment_url = "' . $attachment_url . '"');
+			$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', $attachment_url, $attachment_id, 'full' );
+			$log->log('$fileurl = "' . $fileurl . '"');
 
-		if (substr($fileurl, 0, 7) == 'http://') {
+			if (substr($fileurl, 0, 7) == 'http://') {
 
-			$fileurl = $this->wpro()->url->normalize($fileurl);
+				$fileurl = $this->wpro()->url->normalize($fileurl);
 
-			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $fileurl);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($ch, CURLOPT_AUTOREFERER, true);
+				$ch = curl_init();
+				curl_setopt($ch, CURLOPT_URL, $fileurl);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+				curl_setopt($ch, CURLOPT_AUTOREFERER, true);
 
-			$fh = fopen($filepath, 'w');
-			fwrite($fh, curl_exec_follow($ch));
-			fclose($fh);
+				$fh = fopen($filepath, 'w');
+				fwrite($fh, curl_exec_follow($ch));
+				fclose($fh);
 
-			$this->removeTemporaryLocalData($filepath);
+				$this->removeTemporaryLocalData($filepath);
 
-			return $log->logreturn($filepath);
+				return $log->logreturn($filepath);
 
+			}
 		}
+
 		return $log->logreturn($filepath);
 	}
 
@@ -190,27 +208,32 @@ class WPRO_Uploads {
 
 	function update_attachment_metadata($data) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::update_attachment_metadata()');
-		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $log->logreturn($data);
-		$upload_dir = wp_upload_dir();
-		$filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
-		foreach ($data['sizes'] as $size => $sizedata) {
-			$file = $filepath . $sizedata['file'];
-			$url = $upload_dir['baseurl'] . substr($file, strlen($upload_dir['basedir']));
-			$mime = 'application/octet-stream';
-			switch(substr($file, -4)) {
-			case '.gif':
-				$mime = 'image/gif';
-				break;
-			case '.jpg':
-				$mime = 'image/jpeg';
-				break;
-			case '.png':
-				$mime = 'image/png';
-				break;
-			}
 
-			$this->backend->upload($file, $url, $mime);
+		if (wpro()->backends->is_backend_activated()) {
+
+			if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $log->logreturn($data);
+			$upload_dir = wp_upload_dir();
+			$filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
+			foreach ($data['sizes'] as $size => $sizedata) {
+				$file = $filepath . $sizedata['file'];
+				$url = $upload_dir['baseurl'] . substr($file, strlen($upload_dir['basedir']));
+				$mime = 'application/octet-stream';
+				switch(substr($file, -4)) {
+				case '.gif':
+					$mime = 'image/gif';
+					break;
+				case '.jpg':
+					$mime = 'image/jpeg';
+					break;
+				case '.png':
+					$mime = 'image/png';
+					break;
+				}
+
+				$this->backend->upload($file, $url, $mime);
+			}
 		}
+
 		return $log->logreturn($data);
 	}
 

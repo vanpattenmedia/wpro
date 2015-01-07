@@ -67,6 +67,11 @@ class WPRO_Backends {
 		return $log->logreturn(in_array($name, $names));
 	}
 
+	function is_backend_activated() {
+		if ($this->active_backend === null) return false;
+		return true;
+	}
+
 	function register($backend_class_name) {
 		$log = wpro()->debug->logblock('WPRO_Backends::register()');
 		if ($this->has_backend($backend_class_name::NAME)) return $log->logreturn(false);

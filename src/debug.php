@@ -27,9 +27,13 @@ class WPRO_Debug {
 		return $this;
 	}
 
+	function logblockend() {
+		$this->indentation--;
+	}
+
 	function logreturn($value) {
 		$this->log('return: ' . var_export($value, true));
-		$this->indentation--;
+		$this->logblockend();
 		return $value;
 	}
 

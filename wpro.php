@@ -14,6 +14,7 @@ if (!defined('ABSPATH')) exit();
 class WPRO_Core {
 
 	private static $instance;
+	private $log;
 
 	// TODO: Tests to write: There must not be a __construct here. Since we are calling wpro() from the __constructs of objects created by WPRO_Core, we will end up in a loop creating multiple instances of WPRO_Core.
 
@@ -23,6 +24,8 @@ class WPRO_Core {
 		}
 
 		$this->debug = new WPRO_Debug();
+		$this->log = $this->debug->logblock("\nWPRO Instance");
+		$this->log->log($_SERVER['REQUEST_METHOD'] . ' call to ' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);
 
 		$this->admin = new WPRO_Admin();
 		$this->backends = new WPRO_Backends();
@@ -33,6 +36,10 @@ class WPRO_Core {
 		$this->url = new WPRO_Url();
 
 		add_action('after_setup_theme', array($this, 'init_wp_hook'));
+	}
+
+	function __destruct() {
+		return $this->log->logblockend();
 	}
 
 	function init_wp_hook() {
