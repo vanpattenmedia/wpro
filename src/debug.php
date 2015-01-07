@@ -8,7 +8,7 @@ class WPRO_Debug {
 
 	var $debug_cache;
 	var $indentation;
-	
+
 	function __construct() {
 		$this->clean_debug_cache();
 	}

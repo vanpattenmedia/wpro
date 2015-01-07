@@ -156,27 +156,40 @@ class WPRO_Uploads {
 	function load_image_to_local_path($filepath, $attachment_id) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_local_path($filepath = "' . $filepath . '", $attachment_id = ' . $attachment_id . ')');
 
-		$attachment_url = wp_get_attachment_url( $attachment_id );
-		$log->log('$attachment_url = "' . $attachment_url . '"');
-		$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', $attachment_url, $attachment_id, 'full' );
-		$log->log('$fileurl = "' . $fileurl . '"');
+		if (file_exists ($filepath)) {
 
-		if (substr($fileurl, 0, 7) == 'http://') {
+			// When no backend is active:
+			// Without this file_exists, during an upload to WordPress,
+			// it will try to download the image to it's own path,
+			// which results in the upload being 0 bytes in length.
 
-			$fileurl = wpro()->url->normalize($fileurl);
+			$log->log("Don't download. File already exists.");
 
-			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $fileurl);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($ch, CURLOPT_AUTOREFERER, true);
+		} else {
 
-			$fh = fopen($filepath, 'w');
-			fwrite($fh, curl_exec_follow($ch));
-			fclose($fh);
+			$attachment_url = wp_get_attachment_url( $attachment_id );
+			$log->log('$attachment_url = "' . $attachment_url . '"');
+			$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', $attachment_url, $attachment_id, 'full' );
+			$log->log('$fileurl = "' . $fileurl . '"');
 
-			//$this->removeTemporaryLocalData($filepath);
+			if (substr($fileurl, 0, 7) == 'http://') {
 
-			return $log->logreturn($filepath);
+				$fileurl = wpro()->url->normalize($fileurl);
+
+				$ch = curl_init();
+				curl_setopt($ch, CURLOPT_URL, $fileurl);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+				curl_setopt($ch, CURLOPT_AUTOREFERER, true);
+
+				$fh = fopen($filepath, 'w');
+				fwrite($fh, curl_exec_follow($ch));
+				fclose($fh);
+
+				//$this->removeTemporaryLocalData($filepath);
+
+				return $log->logreturn($filepath);
+
+			}
 
 		}
 

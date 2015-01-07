@@ -61,6 +61,7 @@ class WPRO_TmpDir {
 	function cleanUp() {
 		$log = wpro()->debug->logblock('WPRO_TmpDir::cleanUp()');
 		foreach ($this->cleanUpDirs as $tmpDir) {
+			$log->log('Clean up dir: ' . $tmpDir);
 			if (is_dir($tmpDir)) {
 				$this->rmdirRecursive($tmpDir);
 			}
