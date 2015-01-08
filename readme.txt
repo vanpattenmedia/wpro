@@ -97,7 +97,7 @@ Something like this:
 	}
 	add_action('wpro_setup_backends', 'add_my_backend');
 
-== Frequently Asked Questions ==
+== Q & A ==
 
 = Will this plugin work in Wordpress MU/Multisite environments? =
 
@@ -126,6 +126,17 @@ This is how I check me logs (just a tip):
 
 There is a Makefile, which will help you to run the unit tests.
 Note: You need [composer](https://getcomposer.org/ "composer") to do the unit testing.
+
+= Why are my thumbnails not regenerated when editing an image in the image editor? =
+
+That is an issue with WordPress itself. WordPress will only
+generate thumbs that are smaller than the original. So, let's
+say you first upload a large image and all thumbs are generated.
+Then, you crop the image to a size smaller than the largest
+thumb. Then the largest thumb will not be regenerated, only the
+thumbs smaller than the cropped image.
+
+This is a WordPress issue, not a WPRO issue.
 
 = What about the license? =
 
