@@ -12,9 +12,7 @@ class WPRO_Uploads {
 		add_filter('wp_update_attachment_metadata', array($this, 'update_attachment_metadata')); // We use this filter to store resized versions of the images.
 		add_filter('load_image_to_edit_path', array($this, 'load_image_to_edit_path')); // This filter downloads the image to our local temporary directory, prior to editing the image.
 		add_filter('get_attached_file', array($this, 'load_image_to_local_path'), 10, 2); // This filter downloads the image to our local temporary directory, prior to using the image.
-		add_filter('wp_save_image_file', array($this, 'save_image_file')); // Store image file.
-		add_filter('wp_save_image_editor_file', array($this, 'save_image_file'), 10, 5);
-		add_filter('wp_upload_bits', array($this, 'upload_bits')); // On XMLRPC uploads and image editor edits, files arrives as strings which we are handling in this filter.
+		add_filter('wp_upload_bits', array($this, 'upload_bits')); // On XMLRPC uploads, files arrives as strings which we are handling in this filter.
 		add_filter('wp_handle_upload_prefilter', array($this, 'handle_upload_prefilter')); // This is where we check for filename dupes (and change them to avoid overwrites).
 
 		return $log->logreturn(true);
@@ -194,29 +192,6 @@ class WPRO_Uploads {
 		}
 
 		return $log->logreturn($filepath);
-	}
-
-	function save_image_file($dummy, $filename, $image, $mime_type, $post_id) {
-		$log = wpro()->debug->logblock('WPRO_Uploads::save_image_file($dummy = "' . $dummy . '", $filename = "' . $filename . '", $image, $mime_type = "' . $mime_type . '", $post_id = ' . $post_id .')');
-
-		$reqTmpDir = wpro()->tmpdir->reqTmpDir();
-
-		if (substr($filename, 0, strlen($reqTmpDir)) != $reqTmpDir) return $log->logreturn(false);
-		$tmpfile = substr($filename, strlen($reqTmpDir));
-		if (!preg_match('/^wpro[0-9]+(\/.+)$/', $tmpfile, $regs)) return $log->logreturn(false);
-
-		$tmpfile = $regs[1];
-
-		$image->save($filename, $mime_type);
-
-		$upload = wp_upload_dir();
-		$url = $upload['baseurl'];
-		if (substr($url, -1) != '/') $url .= '/';
-		while (substr($tmpfile, 0, 1) == '/') $tmpfile = substr($tmpfile, 1);
-		$url .= $tmpfile;
-
-		return $log->logreturn($this->backend->upload($filename, $this->wpro()->url->normalize($url), $mime_type));
-
 	}
 
 	function update_attachment_metadata($data) {

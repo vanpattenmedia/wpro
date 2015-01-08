@@ -33,6 +33,7 @@ class WPRO_Core {
 		$this->admin = new WPRO_Admin();
 		$this->backends = new WPRO_Backends();
 		$this->cdn = new WPRO_CDN();
+		$this->edit = new WPRO_Edit(); // Image editing functionality.
 		$this->options = new WPRO_Options();
 		$this->tmpdir = new WPRO_TmpDir();
 		$this->uploads = new WPRO_Uploads();
