@@ -35,40 +35,6 @@ class WPRO_Uploads {
 		return $log->logreturn(true);
 	}
 
-	function generate_attachment_metadata($data) {
-		$log = wpro()->debug->logblock('WPRO_Uploads::generate_attachment_metadata()');
-
-		if (wpro()->backends->is_backend_activated()) {
-
-			if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $log->logreturn($data);
-
-			$upload_dir = wp_upload_dir();
-			$filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
-			foreach ($data['sizes'] as $size => $sizedata) {
-				$file = $filepath . $sizedata['file'];
-				$url = $upload_dir['baseurl'] . substr($file, strlen($upload_dir['basedir']));
-
-				$mime = 'application/octet-stream';
-				switch(substr($file, -4)) {
-					case '.gif':
-						$mime = 'image/gif';
-						break;
-					case '.jpg':
-						$mime = 'image/jpeg';
-						break;
-					case '.png':
-						$mime = 'image/png';
-						break;
-				}
-
-				$this->backend->upload($file, $url, $mime);
-			}
-
-		}
-
-		return $log->logreturn($data);
-	}
-
 	function handle_upload($data) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::handle_upload()');
 
@@ -194,30 +160,35 @@ class WPRO_Uploads {
 		return $log->logreturn($filepath);
 	}
 
+	function generate_attachment_metadata($data) {
+		$log = wpro()->debug->logblock('WPRO_Uploads::generate_attachment_metadata()');
+		return $log->logreturn($this->update_attachment_metadata($data));
+	}
+	
 	function update_attachment_metadata($data) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::update_attachment_metadata()');
 
-		if (wpro()->backends->is_backend_activated()) {
 
-			if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $log->logreturn($data);
-			$upload_dir = wp_upload_dir();
-			$filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
-			foreach ($data['sizes'] as $size => $sizedata) {
-				$file = $filepath . $sizedata['file'];
-				$url = $upload_dir['baseurl'] . substr($file, strlen($upload_dir['basedir']));
-				$mime = 'application/octet-stream';
-				switch(substr($file, -4)) {
-				case '.gif':
-					$mime = 'image/gif';
-					break;
-				case '.jpg':
-					$mime = 'image/jpeg';
-					break;
-				case '.png':
-					$mime = 'image/png';
-					break;
-				}
+		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $log->logreturn($data);
+		$upload_dir = wp_upload_dir();
+		$filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
+		foreach ($data['sizes'] as $size => $sizedata) {
+			$file = $filepath . $sizedata['file'];
+			$url = $upload_dir['baseurl'] . substr($file, strlen($upload_dir['basedir']));
+			$mime = 'application/octet-stream';
+			switch(substr($file, -4)) {
+			case '.gif':
+				$mime = 'image/gif';
+				break;
+			case '.jpg':
+				$mime = 'image/jpeg';
+				break;
+			case '.png':
+				$mime = 'image/png';
+				break;
+			}
 
+			if (wpro()->backends->is_backend_activated()) {
 				$this->backend->upload($file, $url, $mime);
 			}
 		}
