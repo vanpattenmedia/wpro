@@ -24,8 +24,11 @@ class WPRO_Core {
 		}
 
 		$this->debug = new WPRO_Debug();
-		$this->log = $this->debug->logblock("\nWPRO Instance");
+		$this->log = $this->debug->logblock("WPRO Instance");
 		$this->log->log($_SERVER['REQUEST_METHOD'] . ' call to ' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);
+		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+			$this->log->log("POST vars:\n" . var_export($_POST, true));
+		}
 
 		$this->admin = new WPRO_Admin();
 		$this->backends = new WPRO_Backends();
@@ -39,6 +42,7 @@ class WPRO_Core {
 	}
 
 	function __destruct() {
+		$this->log->log("");
 		return $this->log->logblockend();
 	}
 
