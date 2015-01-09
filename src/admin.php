@@ -17,26 +17,25 @@ class WPRO_Admin {
 
 	function admin_form() {
 		$log = wpro()->debug->logblock('WPRO_Admin::admin_form()');
-
 		if (!$this->is_trusted()) {
 			wp_die ( __ ('You do not have sufficient permissions to access this page.'));
 		}
 
-		$wproService = wpro()->options->get('wpro-service');
+		$options = wpro()->options->get_all_options();
 
 		?>
 			<div class="wrap wpro-admin">
-				<form method="post" action="<?php echo(admin_url('options.php')); ?>">
+				<form method="post" action="<?php echo(admin_url('admin-ajax.php')); ?>">
 					<h2>WPRO</h2>
-					<input type="hidden" name="action" value="wpro_settings_POST" />
+					<input type="hidden" name="action" value="wpro_settings" />
 					<table class="form-table">
 						<tr valign="top">
 							<th scope="row">Storage backend</th>
 							<td>
-								<input id="wpro_backend__radio" type="radio" name="wpro-service" value="" /> <label for="wpro_backend__radio">Plugin inactive</label><br />
+								<input id="wpro_backend__radio" type="radio" name="wpro-service" value="" <?php if (!wpro()->backends->is_backend_activated()) echo('checked="checked"'); ?> /> <label for="wpro_backend__radio">Plugin inactive</label><br />
 								<?php foreach (wpro()->backends->backend_names() as $backend): ?>
 									<?php $radio_id = 'wpro_backend_' . sanitize_title($backend) . '_radio'; ?>
-									<input id="<?php echo($radio_id); ?>" type="radio" name="wpro-service" value="<?php echo($backend); ?>" /> <label for="<?php echo($radio_id); ?>"><?php echo($backend); ?></label><br />
+									<input id="<?php echo($radio_id); ?>" type="radio" name="wpro-service" value="<?php echo($backend); ?>" <?php if ($options['wpro-service'] == $backend) echo('checked="checked"'); ?> /> <label for="<?php echo($radio_id); ?>"><?php echo($backend); ?></label><br />
 								<?php endforeach; ?>
 							</td>
 						</tr>
@@ -54,7 +53,7 @@ class WPRO_Admin {
 							<tr valign="top">
 								<th scope="row">Add subfolder to all paths/urls</th>
 								<td>
-									<input type="text" name="wpro-folder" />
+									<input type="text" name="wpro-folder" value="<?php echo(wpro()->options->get('wpro-folder')); ?>" />
 									<p class="description">
 										Example: If you set this to "<b>MyBlog</b>", your URLs may become something like:<br />
 										http://s3-eu-west-1.amazonaws.com/amazonbucket/<b>MyBlog</b>/2014/05/image.jpg
@@ -75,7 +74,7 @@ class WPRO_Admin {
 							<tr valign="top">
 								<th scope="row">Temporary directory</th>
 								<td>
-									<input type="text" name="wpro-folder" value="<?php echo(wpro()->tmpdir->sysTmpDir()); ?>" />
+									<input type="text" name="wpro-tempdir" value="<?php echo(wpro()->options->get('wpro-tempdir')); // echo(wpro()->tmpdir->sysTmpDir()); ?>" />
 									<p class="description">
 										This directory must be writeable for the web server.
 										It will be used for temporary storing files during uploads/edits, so it can be on non-persistent storage.
@@ -105,7 +104,7 @@ class WPRO_Admin {
 			} else {
 				add_action('admin_menu', array($this, 'admin_menu')); // Will add the settings menu.
 			}
-			add_action('admin_post_wpro_settings_POST', array($this, 'admin_post')); // Gets called from plugin admin page POST request.
+			add_action('wp_ajax_wpro_settings', array($this, 'admin_post')); // Gets called from plugin admin page POST request.
 		}
 		return $log->logreturn(true);
 	}
@@ -122,17 +121,40 @@ class WPRO_Admin {
 		// We are handling the POST settings stuff ourselves, instead of using the Settings API.
 		// This is because the Settings API has no way of storing network wide options in multisite installs.
 		if (!$this->is_trusted()) return false;
-		if ($_POST['action'] != 'wpro_settings_POST') return false;
+
+		// First activate the correct backend,
+		// so that wpro()->options->is_an_option() returns
+		// the right stuff for the right backend:
+		if (isset($_POST['wpro-service']) && $_POST['wpro-service'] !== wpro()->options->get('wpro-service')) {
+			wpro()->backends->activate_backend($_POST['wpro-service']);
+		}
+
+		// Set the rest of the options:
 		foreach ($_POST as $key => $val) {
-			if (wpro()->options->is_an_option($key)) {
-				wpro()->options->set($val);
+			if ($key !== 'action' && $key !== 'wpro-service' && $key !== 'submit') {
+				if (wpro()->options->is_an_option($key)) {
+					wpro()->options->set($key, $val);
+				}
 			}
 		}
-		if (is_multisite()) {
-			header('Location: ' . admin_url('network/settings.php?page=wpro&updated=true'));
-		} else {
-			header('Location: ' . admin_url('options-general.php?page=wpro&updated=true'));
+
+		// If the selected backend class has a admin_post() function, then run it:
+		if (wpro()->backends->is_backend_activated()) {
+			$backend = wpro()->backends->active_backend;
+			if (method_exists($backend, 'admin_post')) {
+				$backend->admin_post();
+			}
 		}
+
+		// Redirect back (different urls depending on multisite or not):
+		if (is_multisite()) {
+			$url = admin_url('network/settings.php?page=wpro&updated=true');
+		} else {
+			$url = admin_url('options-general.php?page=wpro&updated=true');
+		}
+		header('Location: ' . $url);
+		$log->log('Redirect to: ' . $url);
+		$log->logblockend();
 		exit();
 	}
 
@@ -148,7 +170,7 @@ class WPRO_Admin {
 				return $log->logreturn(true);
 			}
 		}
-		return false;
+		return $log->logreturn(false);
 	}
 
 	function network_admin_menu() {

@@ -29,7 +29,7 @@ class WPRO_Backend_Filesystem {
 				<tr valign="top">
 					<th scope="row">Filesystem Path</th>
 					<td>
-						<input type="text" name="wpro-fs-path" />
+						<input type="text" name="wpro-fs-path" value="<?php echo(wpro()->options->get_option('wpro-fs-path')); ?>" />
 					</td>
 				</tr>
 			</table>

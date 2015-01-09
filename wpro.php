@@ -52,6 +52,8 @@ class WPRO_Core {
 		do_action('wpro_setup_cdn');
 
 		add_filter('upload_dir', array($this->url, 'upload_dir')); // Sets the paths and urls for uploads.
+
+		$this->backends->activate_backend($this->options->get('wpro-service'));
 	}
 
 	/**

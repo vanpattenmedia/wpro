@@ -32,29 +32,43 @@ class WPRO_Backend_S3 {
 				<tr valign="top">
 					<th scope="row">AWS Key</th>
 					<td>
-						<input type="text" name="wpro-aws-key" />
+						<input type="text" name="wpro-aws-key" value="<?php echo(wpro()->options->get_option('wpro-aws-key')); ?>" />
 					</td>
 				</tr>
 				<tr valign="top">
 					<th scope="row">AWS Secret</th>
 					<td>
-						<input type="text" name="wpro-aws-secret" />
+						<input type="text" name="wpro-aws-secret" value="<?php echo(wpro()->options->get_option('wpro-aws-secret')); ?>" />
 					</td>
 				</tr>
 				<tr valign="top">
 					<th scope="row">S3 Bucket</th>
 					<td>
-						<input type="text" name="wpro-aws-bucket" />
+						<input type="text" name="wpro-aws-bucket" value="<?php echo(wpro()->options->get_option('wpro-aws-bucket')); ?>" />
 					</td>
 				</tr>
 				<tr valign="top">
 					<th scope="row">Virtual hosting enabled for the S3 Bucket</th>
 					<td>
-						<input name="wpro-aws-virthost" id="wpro-aws-virthost" value="1" type="checkbox" />
+						<input name="wpro-aws-virthost" id="wpro-aws-virthost" value="1" type="checkbox" <?php if (wpro()->options->get_option('wpro-aws-virthost')) echo('checked="checked"'); ?> />
 					</td>
 				</tr>
 			</table>
 		<?php
+		return $log->logreturn(true);
+	}
+
+	function admin_post() {
+		$log = wpro()->debug->logblock('WPRO_Backend_S3::admin_post()');
+
+		// The generic admin_post() in admin.php does not handle unchecked checkboxes.
+		// Maybe that should be fixed in a more generic way... Until then:
+		if (!isset($_POST['wpro-aws-virthost'])) {
+			wpro()->options->set('wpro-aws-virthost', '');
+		} else {
+			wpro()->options->set('wpro-aws-virthost', '1');
+		}
+
 		return $log->logreturn(true);
 	}
 
