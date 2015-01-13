@@ -74,7 +74,7 @@ class WPRO_Admin {
 							<tr valign="top">
 								<th scope="row">Temporary directory</th>
 								<td>
-									<input type="text" name="wpro-tempdir" value="<?php echo(wpro()->options->get('wpro-tempdir')); // echo(wpro()->tmpdir->sysTmpDir()); ?>" />
+									<input type="text" name="wpro-tempdir" value="<?php echo(wpro()->tmpdir->sysTmpDir()); ?>" />
 									<p class="description">
 										This directory must be writeable for the web server.
 										It will be used for temporary storing files during uploads/edits, so it can be on non-persistent storage.

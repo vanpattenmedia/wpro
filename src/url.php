@@ -4,6 +4,10 @@ if (!defined('ABSPATH')) exit();
 
 class WPRO_Url {
 
+	function __construct() {
+		add_filter('upload_dir', array($this, 'upload_dir')); // Sets the paths and urls for uploads.
+	}
+
 	// URL encode (i.e. convert to %xx etc in URLs).
 	function normalize($url) {
 		$log = wpro()->debug->logblock('WPRO_Url::normalize()');
@@ -27,7 +31,7 @@ class WPRO_Url {
 			'subdir' => $data['subdir'],
 			'basedir' => wpro()->tmpdir->reqTmpDir(),
 			'baseurl' => $baseurl,
-			'error' => ''
+			'error' => false
 		));
 
 	}

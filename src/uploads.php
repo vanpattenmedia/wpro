@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) exit();
 
 class WPRO_Uploads {
 
+	public $disableFileDupeControl = true; // Should be false. Could be true for testing purposes only.
+
 	function __construct() {
 		$log = wpro()->debug->logblock('WPRO_Uploads::__construct()');
 
@@ -43,7 +45,7 @@ class WPRO_Uploads {
 			$data['url'] = wpro()->url->normalize($data['url']);
 			if (!file_exists($data['file'])) return false; //TODO: Test what is happening in this situation.
 
-			$response = wpro()->backends->active_backend()->upload($data['file'], $data['url'], $data['type']);
+			//OLD WAY: $response = wpro()->backends->active_backend()->upload($data['file'], $data['url'], $data['type']);
 			$data = apply_filters('wpro_backend_handle_upload', $data);
 
 			// One thing has changed here. Previously, we returned false from this function, when upload failed.
@@ -59,7 +61,7 @@ class WPRO_Uploads {
 	function handle_upload_prefilter($file) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::handle_upload_prefilter()');
 
-		if (wpro()->backends->is_backend_activated()) {
+		if (wpro()->backends->is_backend_activated() && !$this->disableFileDupeControl) {
 
 			$upload = wp_upload_dir();
 
@@ -67,7 +69,7 @@ class WPRO_Uploads {
 			$path = trim($upload['url'], '/') . '/' . $name;
 
 			$counter = 0;
-			while (wpro()->backends->active_backend->file_exists($path)) {
+			while (apply_filters('wpro_backend_file_exists', true, $path)) {
 				if (preg_match('/\.([^\.\/]+)$/', $file['name'], $regs)) {
 					$ending = '.' . $regs[1];
 					$preending = substr($file['name'], 0, 0 - strlen($ending));
@@ -189,7 +191,7 @@ class WPRO_Uploads {
 			}
 
 			if (wpro()->backends->is_backend_activated()) {
-				$this->backend->upload($file, $url, $mime);
+				// OLD WAY, USE A FILTER INSTEAD! $this->backend->upload($file, $url, $mime);
 			}
 		}
 

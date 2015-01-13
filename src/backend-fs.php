@@ -10,7 +10,9 @@ class WPRO_Backend_Filesystem {
 		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::activate()');
 
 		wpro()->options->register('wpro-fs-path');
+		wpro()->options->register('wpro-fs-baseurl');
 
+		add_filter('wpro_backend_file_exists', array($this, 'file_exists'), 10, 2);
 		add_filter('wpro_backend_handle_upload', array($this, 'handle_upload'));
 		add_filter('wpro_backend_retrieval_baseurl', array($this, 'url'));
 
@@ -32,20 +34,41 @@ class WPRO_Backend_Filesystem {
 						<input type="text" name="wpro-fs-path" value="<?php echo(wpro()->options->get_option('wpro-fs-path')); ?>" />
 					</td>
 				</tr>
+				<tr valign="top">
+					<th scope="row">Base URL</th>
+					<td>
+						<input type="text" name="wpro-fs-baseurl" value="<?php echo(wpro()->options->get_option('wpro-fs-baseurl')); ?>" />
+						<p class="description">
+							This is the URL to your custom path.
+							(Your web server must be configured to respond to those requests.)
+							<br />
+							Example: http://myfakecdn.com/
+						</p>
+					</td>
+				</tr>
 			</table>
 		<?php
 		return $log->logreturn(true);
 	}
 
+	function file_exists($exists, $file) {
+		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::file_exists($exists, $file = "' . $file . '")');
+		return $log->logreturn(false);
+	}
+
 	function handle_upload($data) {
-		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::handle_upload()');
+		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::handle_upload($data)');
 
 		$file = $data['file'];
 		$url = $data['url'];
 		$mime = $data['type'];
 
-		wpro()->debug->logblock('WPROS3::upload("' . $file . '", "' . $url . '", "' . $mime . '");');
+		$log->log('$file = ' . $file);
+		$log->log('$url = ' . $url);
+		$log->log('$mime = ' . $mime);
+
 		$url = wpro()->url->normalize($url);
+
 		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $url, $regs)) return false;
 		$url = $regs[3];
 
@@ -66,6 +89,7 @@ class WPRO_Backend_Filesystem {
 
 		wpro()->options->deregister('wpro-fs-path');
 
+		remove_filter('wpro_backend_file_exists', array($this, 'file_exists'));
 		remove_filter('wpro_backend_handle_upload', array($this, 'handle_upload'));
 		remove_filter('wpro_backend_retrieval_baseurl', array($this, 'url'));
 
@@ -75,11 +99,11 @@ class WPRO_Backend_Filesystem {
 	function url($value) {
 		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::url()');
 
-		$url = admin_url('admin-ajax.php?action=wpro&file=');
+		// Remove trailing slashes.
+		$url = rtrim(wpro()->options->get('wpro-fs-baseurl'), '/');
 
 		return $log->logreturn($url);
 	}
-		
 
 }
 
