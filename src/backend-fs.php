@@ -79,9 +79,18 @@ class WPRO_Backend_Filesystem {
 		if (!is_dir(dirname($path))) mkdir(dirname($path), 0777, true);
 		if (!is_dir(dirname($path))) return $log->logreturn(false);
 
-		return rename($file, $path);
+		// Renaming is NOT possible.
+		// Other functionality requires the file to be at it's temporary upload position.
+		// This is just here for reference on how you can NOT do things:
+		//if (!rename($file, $path)) return $log->logreturn(false);
 
-		return $log->logreturn(true);
+		$log->log('Copy ' . $file . ' to ' . $path . '.');
+		if (!copy($file, $path)) {
+			$log->log('Copying failed.');
+			return $log->logreturn(false);
+		}
+
+		return $log->logreturn($data);
 	}
 
 	function deactivate() {

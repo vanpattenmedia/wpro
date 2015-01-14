@@ -48,9 +48,9 @@ class WPRO_Uploads {
 			//OLD WAY: $response = wpro()->backends->active_backend()->upload($data['file'], $data['url'], $data['type']);
 			$data = apply_filters('wpro_backend_handle_upload', $data);
 
-			// One thing has changed here. Previously, we returned false from this function, when upload failed.
-			// TODO: Check what is happening here on failing uploads.
-
+			if (!is_array($data)) {
+				$log->log('Some error somewhere: $data after wpro_backend_handle_upload filter is not an array.');
+			}
 		}
 
 		return $log->logreturn($data);
@@ -122,53 +122,61 @@ class WPRO_Uploads {
 	function load_image_to_local_path($filepath, $attachment_id) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_local_path($filepath = "' . $filepath . '", $attachment_id = ' . $attachment_id . ')');
 
-		if (file_exists ($filepath)) {
+		if ($filepath === '') {
 
-			// When no backend is active:
-			// Without this file_exists, during an upload to WordPress,
-			// it will try to download the image to it's own path,
-			// which results in the upload being 0 bytes in length.
-
-			$log->log("Don't download. File already exists.");
+			// Why is this shit being called with an empty $filepath!?
+			$log->log('File path is empty!');
 
 		} else {
 
-			$attachment_url = wp_get_attachment_url( $attachment_id );
-			$log->log('$attachment_url = "' . $attachment_url . '"');
-			$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', $attachment_url, $attachment_id, 'full' );
-			$log->log('$fileurl = "' . $fileurl . '"');
+			if (file_exists ($filepath)) {
 
-			if (substr($fileurl, 0, 7) == 'http://') {
+				// When no backend is active:
+				// Without this file_exists, during an upload to WordPress,
+				// it will try to download the image to it's own path,
+				// which results in the upload being 0 bytes in length.
 
-				$fileurl = wpro()->url->normalize($fileurl);
+				$log->log("Don't download. File already exists.");
 
-				$ch = curl_init();
-				curl_setopt($ch, CURLOPT_URL, $fileurl);
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-				curl_setopt($ch, CURLOPT_AUTOREFERER, true);
+			} else {
 
-				$fh = fopen($filepath, 'w');
-				fwrite($fh, curl_exec_follow($ch));
-				fclose($fh);
+				$attachment_url = wp_get_attachment_url( $attachment_id );
+				$log->log('$attachment_url = "' . $attachment_url . '"');
+				$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', $attachment_url, $attachment_id, 'full' );
+				$log->log('$fileurl = "' . $fileurl . '"');
 
-				//$this->removeTemporaryLocalData($filepath);
+				if (substr($fileurl, 0, 7) == 'http://') {
 
-				return $log->logreturn($filepath);
+					$fileurl = wpro()->url->normalize($fileurl);
+
+					$ch = curl_init();
+					curl_setopt($ch, CURLOPT_URL, $fileurl);
+					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+					curl_setopt($ch, CURLOPT_AUTOREFERER, true);
+
+					$fh = fopen($filepath, 'w');
+					fwrite($fh, curl_exec_follow($ch));
+					fclose($fh);
+
+					//$this->removeTemporaryLocalData($filepath);
+
+					return $log->logreturn($filepath);
+
+				}
 
 			}
-
 		}
 
 		return $log->logreturn($filepath);
 	}
 
 	function generate_attachment_metadata($data) {
-		$log = wpro()->debug->logblock('WPRO_Uploads::generate_attachment_metadata()');
+		$log = wpro()->debug->logblock('WPRO_Uploads::generate_attachment_metadata($data = ' . var_export($data, true) . '))');
 		return $log->logreturn($this->update_attachment_metadata($data));
 	}
 	
 	function update_attachment_metadata($data) {
-		$log = wpro()->debug->logblock('WPRO_Uploads::update_attachment_metadata()');
+		$log = wpro()->debug->logblock('WPRO_Uploads::update_attachment_metadata($data = ' . var_export($data, true) . ')');
 
 
 		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $log->logreturn($data);
