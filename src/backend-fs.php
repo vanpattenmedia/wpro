@@ -51,9 +51,19 @@ class WPRO_Backend_Filesystem {
 		return $log->logreturn(true);
 	}
 
-	function file_exists($exists, $file) {
-		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::file_exists($exists, $file = "' . $file . '")');
-		return $log->logreturn(false);
+	private function url2file($url) {
+		$file = explode('/', $url);
+		$parts = count($file);
+		$file = rtrim(wpro()->options->get('wpro-fs-path'), '/') . '/' . $file[$parts - 3] . '/' . $file[$parts - 2] . '/' . $file[$parts - 1];
+		return $file;
+	}
+
+	function file_exists($exists, $url) {
+		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::file_exists($exists, $url = "' . $url . '")');
+		$file = $this->url2file($url);
+		$log->log('$url = ' . $url);
+		$log->log('$file = ' . $file);
+		return $log->logreturn(file_exists($file));
 	}
 
 	function store_file($data) {
@@ -66,8 +76,6 @@ class WPRO_Backend_Filesystem {
 		$log->log('$file = ' . $file);
 		$log->log('$url = ' . $url);
 		$log->log('$mime = ' . $mime);
-
-		$url = wpro()->url->normalize($url);
 
 		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $url, $regs)) return false;
 		$url = $regs[3];

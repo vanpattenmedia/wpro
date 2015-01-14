@@ -80,7 +80,11 @@ class WPRO_Backend_S3 {
 		$mime = $data['type'];
 
 		wpro()->debug->logblock('WPROS3::upload("' . $file . '", "' . $url . '", "' . $mime . '");');
-		$url = $this->wpro()->url->normalize($url);
+
+		//$url = $this->wpro()->url->normalize($url);
+		// Is there a real need for normalizing S3 urls?
+
+
 		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $url, $regs)) return $log->logreturn(false);
 		$url = $regs[3];
 

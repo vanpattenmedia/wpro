@@ -1,20 +1,13 @@
 <?php
 
+// There is no normalizing of URLs anymore. If some backend needs normalizing, it should be in the backend code...
+
 if (!defined('ABSPATH')) exit();
 
 class WPRO_Url {
 
 	function __construct() {
 		add_filter('upload_dir', array($this, 'upload_dir')); // Sets the paths and urls for uploads.
-	}
-
-	// URL encode (i.e. convert to %xx etc in URLs).
-	function normalize($url) {
-		$log = wpro()->debug->logblock('WPRO_Url::normalize()');
-		if (strpos($url, '%') !== false) return $url;
-		$url = explode('/', $url);
-		foreach ($url as $key => $val) $url[$key] = urlencode($val);
-		return $log->logreturn(str_replace('%3A', ':', join('/', $url)));
 	}
 
 	function upload_dir($data) {

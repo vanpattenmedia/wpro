@@ -39,6 +39,8 @@ class WPRO_Debug {
 
 	function log($msg) {
 
+		if (is_array($msg)) $msg = var_export($msg, true);
+
 		$this->debug_cache[] = trim($msg);
 
 		if (defined('WPRO_DEBUG') && WPRO_DEBUG) {

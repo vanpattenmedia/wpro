@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) exit();
 
 class WPRO_Uploads {
 
-	public $disableFileDupeControl = true; // Should be false. Could be true for testing purposes only.
+	public $disableFileDupeControl = false; // Should be false. Could be true for testing purposes only.
 
 	function __construct() {
 		$log = wpro()->debug->logblock('WPRO_Uploads::__construct()');
@@ -23,8 +23,6 @@ class WPRO_Uploads {
 	function exists($path) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::exists()');
 
-		$path = $this->wpro()->url->normalize($path);
-
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_NOBODY, 1);
 		curl_setopt($ch, CURLOPT_URL, $path);
@@ -42,7 +40,6 @@ class WPRO_Uploads {
 
 		if (wpro()->backends->is_backend_activated()) {
 
-			$data['url'] = wpro()->url->normalize($data['url']);
 			if (!file_exists($data['file'])) return false; //TODO: Test what is happening in this situation.
 
 			//OLD WAY: $response = wpro()->backends->active_backend()->upload($data['file'], $data['url'], $data['type']);
@@ -59,6 +56,10 @@ class WPRO_Uploads {
 	// Handle duplicate filenames:
 	// Wordpress never calls the wp_handle_upload_overrides filter properly, so we do not have any good way of setting a callback for wp_unique_filename_callback, which would be the most beautiful way of doing this. So, instead we are usting the wp_handle_upload_prefilter to check for duplicates and rename the files...
 	function handle_upload_prefilter($file) {
+
+		// We must sanitize before dupe control...
+		$file['name']= sanitize_file_name($file['name']);
+
 		$log = wpro()->debug->logblock('WPRO_Uploads::handle_upload_prefilter()');
 
 		if (wpro()->backends->is_backend_activated() && !$this->disableFileDupeControl) {
@@ -99,8 +100,6 @@ class WPRO_Uploads {
 
 			$tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
 			while (file_exists($tmpfile)) $tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
-
-			$filepath = $this->wpro()->url->normalize($filepath);
 
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $filepath);
@@ -146,8 +145,6 @@ class WPRO_Uploads {
 				$log->log('$fileurl = "' . $fileurl . '"');
 
 				if (substr($fileurl, 0, 7) == 'http://') {
-
-					$fileurl = wpro()->url->normalize($fileurl);
 
 					$ch = curl_init();
 					curl_setopt($ch, CURLOPT_URL, $fileurl);
@@ -232,7 +229,7 @@ class WPRO_Uploads {
 
 		return $log->logreturn(array(
 			'file' => $tmpfile,
-			'url' => $this->wpro()->url->normalize($upload['url'] . '/' . $data['name']),
+			'url' => rtrim($upload['url'], '/') . '/' . $data['name'],
 			'error' => false
 		));
 	}
