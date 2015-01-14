@@ -13,7 +13,7 @@ class WPRO_Backend_Filesystem {
 		wpro()->options->register('wpro-fs-baseurl');
 
 		add_filter('wpro_backend_file_exists', array($this, 'file_exists'), 10, 2);
-		add_filter('wpro_backend_handle_upload', array($this, 'handle_upload'));
+		add_filter('wpro_backend_store_file', array($this, 'store_file'));
 		add_filter('wpro_backend_retrieval_baseurl', array($this, 'url'));
 
 		return $log->logreturn(true);
@@ -56,7 +56,7 @@ class WPRO_Backend_Filesystem {
 		return $log->logreturn(false);
 	}
 
-	function handle_upload($data) {
+	function store_file($data) {
 		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::handle_upload($data)');
 
 		$file = $data['file'];

@@ -46,10 +46,10 @@ class WPRO_Uploads {
 			if (!file_exists($data['file'])) return false; //TODO: Test what is happening in this situation.
 
 			//OLD WAY: $response = wpro()->backends->active_backend()->upload($data['file'], $data['url'], $data['type']);
-			$data = apply_filters('wpro_backend_handle_upload', $data);
+			$data = apply_filters('wpro_backend_store_file', $data);
 
 			if (!is_array($data)) {
-				$log->log('Some error somewhere: $data after wpro_backend_handle_upload filter is not an array.');
+				$log->log('Some error somewhere: $data after wpro_backend_store_file filter is not an array.');
 			}
 		}
 
@@ -199,7 +199,11 @@ class WPRO_Uploads {
 			}
 
 			if (wpro()->backends->is_backend_activated()) {
-				// OLD WAY, USE A FILTER INSTEAD! $this->backend->upload($file, $url, $mime);
+				apply_filters('wpro_backend_store_file', array(
+					'file' => $file,
+					'url' => $url,
+					'type' => $mime
+				));
 			}
 		}
 
