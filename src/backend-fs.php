@@ -51,16 +51,9 @@ class WPRO_Backend_Filesystem {
 		return $log->logreturn(true);
 	}
 
-	private function url2file($url) {
-		$file = explode('/', $url);
-		$parts = count($file);
-		$file = rtrim(wpro()->options->get('wpro-fs-path'), '/') . '/' . $file[$parts - 3] . '/' . $file[$parts - 2] . '/' . $file[$parts - 1];
-		return $file;
-	}
-
 	function file_exists($exists, $url) {
 		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::file_exists($exists, $url = "' . $url . '")');
-		$file = $this->url2file($url);
+		$file = wpro()->url->blogRelativeUploadPath($url);
 		$log->log('$url = ' . $url);
 		$log->log('$file = ' . $file);
 		return $log->logreturn(file_exists($file));
@@ -69,9 +62,9 @@ class WPRO_Backend_Filesystem {
 	function store_file($data) {
 		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::handle_upload($data)');
 
-		$file = $data['file'];
-		$url = $data['url'];
-		$mime = $data['type'];
+		$file = $data['file']; // Where the file is right now (like in /tmp)
+		$url = $data['url']; // The URL where it is supposed to be.
+		$mime = $data['type']; // Mime type
 
 		$log->log('$file = ' . $file);
 		$log->log('$url = ' . $url);

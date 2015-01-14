@@ -30,23 +30,19 @@ class WPRO_Edit {
 			return $log->logreturn(null);
 		}
 
+		// Just test so we are really using a temporary directory as work dir.
 		$reqTmpDir = wpro()->tmpdir->reqTmpDir();
-
 		if (substr($filename, 0, strlen($reqTmpDir)) != $reqTmpDir) return $log->logreturn(false);
-		$tmpfile = substr($filename, strlen($reqTmpDir));
-		if (!preg_match('/^wpro[0-9]+(\/.+)$/', $tmpfile, $regs)) return $log->logreturn(false);
-
-		$tmpfile = $regs[1];
 
 		$image->save($filename, $mime_type);
 
-		$upload = wp_upload_dir();
-		$url = $upload['baseurl'];
-		if (substr($url, -1) != '/') $url .= '/';
-		while (substr($tmpfile, 0, 1) == '/') $tmpfile = substr($tmpfile, 1);
-		$url .= $tmpfile;
+		apply_filters('wpro_backend_store_file', array(
+			'file' => $filename,
+			'url' => wpro()->url->attachmentUrlFromFilePath($filename),
+			'type' => $mime_type
+		));
 
-		return $log->logreturn(wpro()->backends->active_backend->upload($filename, wpro()->url->normalize($url), $mime_type));
+		return $log->logreturn(true);
 
 	}
 
