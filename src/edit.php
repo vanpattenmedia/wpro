@@ -38,7 +38,7 @@ class WPRO_Edit {
 
 		apply_filters('wpro_backend_store_file', array(
 			'file' => $filename,
-			'url' => wpro()->url->attachmentUrlFromFilePath($filename),
+			'url' => wpro()->url->attachmentUrl($filename),
 			'type' => $mime_type
 		));
 

@@ -12,8 +12,10 @@ class WPRO_Uploads {
 		add_filter('wp_handle_upload', array($this, 'handle_upload'));
 		add_filter('wp_generate_attachment_metadata', array($this, 'generate_attachment_metadata')); // We use this filter to store resized versions of the images.
 		add_filter('wp_update_attachment_metadata', array($this, 'update_attachment_metadata')); // We use this filter to store resized versions of the images.
-		add_filter('load_image_to_edit_path', array($this, 'load_image_to_edit_path')); // This filter downloads the image to our local temporary directory, prior to editing the image.
-		add_filter('get_attached_file', array($this, 'load_image_to_local_path'), 10, 2); // This filter downloads the image to our local temporary directory, prior to using the image.
+
+		add_filter('load_image_to_edit_path', array($this, 'load_image_to_edit_path'), 10, 3); // This filter downloads the image to our local temporary directory, prior to editing the image.
+		add_filter('load_image_to_edit_filesystempath', array($this, 'load_image_to_edit_filesystempath'), 10, 3);
+		add_filter('load_image_to_edit_attachmenturl', array($this, 'load_image_to_edit_attachmenturl'), 10, 3);
 		add_filter('wp_upload_bits', array($this, 'upload_bits')); // On XMLRPC uploads, files arrives as strings which we are handling in this filter.
 		add_filter('wp_handle_upload_prefilter', array($this, 'handle_upload_prefilter')); // This is where we check for filename dupes (and change them to avoid overwrites).
 
@@ -89,37 +91,20 @@ class WPRO_Uploads {
 		return $log->logreturn($file);
 	}
 
-
-	function load_image_to_edit_path($filepath) {
-		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_edit_path()');
-
-		if (substr($filepath, 0, 7) == 'http://' || substr($filepath, 0, 8) == 'https://') {
-
-			$ending = '';
-			if (preg_match('/\.([^\.\/]+)$/', $filepath, $regs)) $ending = '.' . $regs[1];
-
-			$tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
-			while (file_exists($tmpfile)) $tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
-
-			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $filepath);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($ch, CURLOPT_AUTOREFERER, true);
-
-			$fh = fopen($tmpfile, 'w');
-			fwrite($fh, curl_exec_follow($ch));
-			fclose($fh);
-
-			$this->removeTemporaryLocalData($tmpfile);
-
-			return $log->logreturn($tmpfile);
-
-		}
+	// Just for logging...
+	function load_image_to_edit_filesystempath($filepath, $attachment_id, $size) {
+		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_edit_filesystempath($filepath = "' . $filepath . '", $attachment_id = ' . $attachment_id . ', $size = ' . $size . ')');
 		return $log->logreturn($filepath);
 	}
 
-	function load_image_to_local_path($filepath, $attachment_id) {
-		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_local_path($filepath = "' . $filepath . '", $attachment_id = ' . $attachment_id . ')');
+	// Just for logging...
+	function load_image_to_edit_attachmenturl($url, $attachment_id, $size) {
+		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_edit_attachmenturl($url = "' . $url . '", $attachment_id = ' . $attachment_id . ', $size = ' . $size . ')');
+		return $log->logreturn($url);
+	}
+
+	function load_image_to_edit_path($filepath, $attachment_id, $size) {
+		$log = wpro()->debug->logblock('WPRO_Uploads::load_image_to_edit_path($filepath = "' . $filepath . '", $attachment_id = ' . $attachment_id . ', $size = ' . $size . ')');
 
 		if ($filepath === '') {
 
@@ -140,11 +125,15 @@ class WPRO_Uploads {
 			} else {
 
 				$attachment_url = wp_get_attachment_url( $attachment_id );
-				$log->log('$attachment_url = "' . $attachment_url . '"');
-				$fileurl = apply_filters( 'load_image_to_edit_attachmenturl', $attachment_url, $attachment_id, 'full' );
-				$log->log('$fileurl = "' . $fileurl . '"');
+				$fileurl = wpro()->url->attachmentUrl($filepath);
 
-				if (substr($fileurl, 0, 7) == 'http://') {
+				$filepath = wpro()->url->tmpFilePath($filepath);
+
+				$log->log('$attachment_url = "' . $attachment_url . '"');
+				$log->log('$fileurl = "' . $fileurl . '"');
+				$log->log('$filepath = "' . $filepath . '"');
+
+				if ((substr($fileurl, 0, 7) == 'http://') || (substr($fileurl, 0, 8) == 'https://')) {
 
 					$ch = curl_init();
 					curl_setopt($ch, CURLOPT_URL, $fileurl);

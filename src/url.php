@@ -10,12 +10,19 @@ class WPRO_Url {
 		add_filter('upload_dir', array($this, 'upload_dir')); // Sets the paths and urls for uploads.
 	}
 
-	function attachmentUrlFromFilePath($file) {
+	function attachmentUrl($file) {
 		$baseurl = apply_filters('wpro_backend_retrieval_baseurl', '');
-		return rtrim($baseurl, '/') . '/' . ltrim($this->blogRelativeUploadPath($file), '/');
+		return rtrim($baseurl, '/') . '/' . ltrim($this->relativePath($file), '/');
 	}
 
-	function blogRelativeUploadPath($url) {
+	// Returns a temporary location in the filesystem, where we can store the file during the current request.
+	function tmpFilePath($file) {
+		$path = wpro()->tmpdir->reqTmpDir() . '/' . ltrim($this->relativePath($file), '/');
+		if (!is_dir(dirname($path))) mkdir(dirname($path), 0777, true);
+		return $path;
+	}
+
+	function relativePath($url) {
 		$file = explode('/', $url);
 		$parts = count($file);
 		$file = $file[$parts - 3] . '/' . $file[$parts - 2] . '/' . $file[$parts - 1];

@@ -53,7 +53,7 @@ class WPRO_Backend_Filesystem {
 
 	function file_exists($exists, $url) {
 		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::file_exists($exists, $url = "' . $url . '")');
-		$file = wpro()->url->blogRelativeUploadPath($url);
+		$path = rtrim(wpro()->options->get('wpro-fs-path'), '/') . '/' . trim(wpro()->url->relativePath($url), '/');
 		$log->log('$url = ' . $url);
 		$log->log('$file = ' . $file);
 		return $log->logreturn(file_exists($file));
