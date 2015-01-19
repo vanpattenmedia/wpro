@@ -18,7 +18,7 @@ class WPRO_Url {
 	function blogRelativeUploadPath($url) {
 		$file = explode('/', $url);
 		$parts = count($file);
-		$file = rtrim(wpro()->options->get('wpro-fs-path'), '/') . '/' . $file[$parts - 3] . '/' . $file[$parts - 2] . '/' . $file[$parts - 1];
+		$file = $file[$parts - 3] . '/' . $file[$parts - 2] . '/' . $file[$parts - 1];
 		return $file;
 	}
 
