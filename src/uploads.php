@@ -171,17 +171,11 @@ class WPRO_Uploads {
 		foreach ($data['sizes'] as $size => $sizedata) {
 			$file = $filepath . $sizedata['file'];
 			$url = $upload_dir['baseurl'] . substr($file, strlen($upload_dir['basedir']));
-			$mime = 'application/octet-stream';
-			switch(substr($file, -4)) {
-			case '.gif':
-				$mime = 'image/gif';
-				break;
-			case '.jpg':
-				$mime = 'image/jpeg';
-				break;
-			case '.png':
-				$mime = 'image/png';
-				break;
+			$filetype = wp_check_filetype($file);
+			if (is_array($filetype) && isset($filetype['type'])) {
+				$mime = $filetype['type'];
+			} else {
+				$mime = 'application/octet-stream';
 			}
 
 			if (wpro()->backends->is_backend_activated()) {
