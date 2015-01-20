@@ -1,8 +1,18 @@
 <?php
 
-class BackendTest extends WP_UnitTestCase {
+class BackendsTest extends WP_UnitTestCase {
 
-	function testDeactivationOfBackendShouldMakeActiveBackendNull() {
+	function testActivationAndDeactivationOfBackend() {
+
+		wpro()->backends->deactivate_backend();
+		$this->assertNull(wpro()->backends->active_backend);
+
+		$backendName = 'Custom Filesystem Path';
+		wpro()->backends->activate_backend($backendName);
+		$activeBackend = wpro()->backends->active_backend;
+		$this->assertNotNull($activeBackend);
+		$this->assertEquals($backendName, $activeBackend::NAME);
+
 		wpro()->backends->deactivate_backend();
 		$this->assertNull(wpro()->backends->active_backend);
 	}
@@ -11,51 +21,32 @@ class BackendTest extends WP_UnitTestCase {
 		$this->assertNull(wpro()->backends->backend_by_name('this_shit_does_not_exist'));
 	}
 
-}
-
-
-/*
-class ExampleBackendClass {
-
-	const NAME = "Example";
-
-	function __construct($name) {
-		$this->name = $name;
-	}
-
-}
-
-class BackendTest extends WP_UnitTestCase {
-
-	function testRegisteringBackendClass() {
-		$backend = new ExampleBackendClass('Unit Test Backend');
-		$this->assertTrue(wpro()->backends->register($backend));
-		$this->assertTrue(wpro()->backends->has_backend('Unit Test Backend'));
-		$this->assertFalse(wpro()->backends->has_backend('Unit Test Backend Which Does not Exist'));
-
-		// Registering the instance once again. Should return false.
-		$this->assertFalse(wpro()->backends->register($backend));
-
-		// Regostering another instance with the same name. Should not work. Names must be unique.
-		$backend2 = new ExampleBackendClass('Unit Test Backend');
-		$this->assertFalse(wpro()->backends->register($backend));
-
-		// Regostering yet another instance with another name. Should work.
-		$backend3 = new ExampleBackendClass('3rd Unit Test Backend');
-		$this->assertTrue(wpro()->backends->register($backend3));
+	function testBackendByNameShouldReturnsCorrectObject() {
+		$backendName = 'Custom Filesystem Path';
+		$backendObj = wpro()->backends->backend_by_name($backendName);
+		$this->assertEquals($backendName, $backendObj::NAME);
 	}
 
 	function testStandardBackendsAreRegistered() {
 		$this->assertTrue(wpro()->backends->has_backend('Amazon S3'));
+		$this->assertTrue(wpro()->backends->has_backend('Custom Filesystem Path'));
+
+		// There should be no other backends than the standard ones, at this point:
+		$this->assertEquals(count(wpro()->backends->backend_names()), 2);
+		
 	}
 
-	function testActiveBackendBackwardsCompatibilityForS3() {
-		$this->assertTrue(wpro()->options->set('wpro-service', 's3')); // Set to old legacy value.
-		$active_backend = wpro()->backends->active_backend;
-		$this->assertNotNull($active_backend);
-		$this->assertEquals($active_backend->name, 'Amazon S3');
+	function testTheIsBackendActivatedFunction() {
+
+		wpro()->backends->deactivate_backend();
+		$this->assertFalse(wpro()->backends->is_backend_activated());
+
+		$backendName = 'Custom Filesystem Path';
+		wpro()->backends->activate_backend($backendName);
+		$this->assertTrue(wpro()->backends->is_backend_activated());
+
+		wpro()->backends->deactivate_backend();
+		$this->assertFalse(wpro()->backends->is_backend_activated());
 	}
-	
+
 }
-	*/
-

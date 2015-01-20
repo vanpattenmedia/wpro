@@ -24,10 +24,14 @@ class WPRO_Core {
 		}
 
 		$this->debug = new WPRO_Debug();
+
+		// If this is not a test run, log URL, method and POST vars:
 		$this->log = $this->debug->logblock("WPRO Instance");
-		$this->log->log($_SERVER['REQUEST_METHOD'] . ' call to ' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);
-		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			$this->log->log("POST vars:\n" . var_export($_POST, true));
+		if (isset ($_SERVER) && isset ($_SERVER['REQUEST_METHOD']) && isset ($_SERVER ['SERVER_NAME']) && isset ($_SERVER['REQUEST_URI'])) {
+			$this->log->log($_SERVER['REQUEST_METHOD'] . ' call to ' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);
+			if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+				$this->log->log("POST vars:\n" . var_export($_POST, true));
+			}
 		}
 
 		$this->admin = new WPRO_Admin();

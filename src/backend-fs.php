@@ -110,8 +110,13 @@ class WPRO_Backend_Filesystem {
 	function deactivate() {
 		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::deactivate()');
 
+		// The deactivate() function MUST deregister the options that
+		// the activate() function registers:
 		wpro()->options->deregister('wpro-fs-path');
+		wpro()->options->deregister('wpro-fs-baseurl');
 
+		// The deactivate() function MUST remove the filters that
+		// the activate() function adds:
 		remove_filter('wpro_backend_file_exists', array($this, 'file_exists'));
 		remove_filter('wpro_backend_handle_upload', array($this, 'handle_upload'));
 		remove_filter('wpro_backend_retrieval_baseurl', array($this, 'url'));
