@@ -21,3 +21,4 @@ class WPRO_Http {
 		if ($httpCode != 200) return $log->logreturn(false);
 		return $log->logreturn(true);
 	}
+}
