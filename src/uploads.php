@@ -72,16 +72,28 @@ class WPRO_Uploads {
 			$path = trim($upload['url'], '/') . '/' . $name;
 
 			$counter = 0;
-			while (apply_filters('wpro_backend_file_exists', true, $path)) {
-				if (preg_match('/\.([^\.\/]+)$/', $file['name'], $regs)) {
-					$ending = '.' . $regs[1];
-					$preending = substr($file['name'], 0, 0 - strlen($ending));
-					$name = $preending . '_' . $counter . $ending;
-				} else {
-					$name = $file['name'] . '_' . $counter;
+
+			$exists = true;
+			while ($exists) {
+				$exists = apply_filters('wpro_backend_file_exists', null, $path);
+				if (is_null ($exists)) {
+					// no wpro_backend_file_exists filter, or the filter returned null.
+					// use standard exists check (using http(s) request...)
+
+					$exists = wpro()->http->url_exists($path);
 				}
-				$path = trim($upload['url'], '/') . '/' . $name;
-				$counter++;
+
+				if ($exists) {
+					if (preg_match('/\.([^\.\/]+)$/', $file['name'], $regs)) {
+						$ending = '.' . $regs[1];
+						$preending = substr($file['name'], 0, 0 - strlen($ending));
+						$name = $preending . '_' . $counter . $ending;
+					} else {
+						$name = $file['name'] . '_' . $counter;
+					}
+					$path = trim($upload['url'], '/') . '/' . $name;
+					$counter++;
+				}
 			}
 
 			$file['name'] = $name;

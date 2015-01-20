@@ -17,7 +17,7 @@ class WPRO_Backend_S3 {
 		wpro()->options->register('wpro-aws-endpoint');
 		wpro()->options->register('wpro-aws-ssl');
 
-		add_filter('wpro_backend_handle_upload', array($this, 'handle_upload'));
+		add_filter('wpro_backend_store_file', array($this, 'store_file'));
 		add_filter('wpro_backend_retrieval_baseurl', array($this, 'url'));
 
 		return $log->logreturn(true);
@@ -72,7 +72,7 @@ class WPRO_Backend_S3 {
 		return $log->logreturn(true);
 	}
 
-	function handle_upload($data) {
+	function store_file($data) {
 		$log = wpro()->debug->logblock('WPRO_Backend_S3::handle_upload()');
 
 		$file = $data['file'];
