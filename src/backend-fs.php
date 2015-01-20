@@ -4,8 +4,20 @@ if (!defined('ABSPATH')) exit();
 
 class WPRO_Backend_Filesystem {
 
+	// A backend class MUST have:
+	// * a NAME constant with a unique name of your backend.
+	// * three functions: activate(), admin_form() and deactivate()
+	//
+	// You probably also want to take care of those three filters:
+	// * wpro_backend_file_exists
+	// * wpro_backend_store_file
+	// * wpro_backend_retrieval_baseurl
+
 	const NAME = 'Custom Filesystem Path';
 
+	// The filters and options registered in the activate() function,
+	// must be de-registered in the deactivate() function, or funny stuff
+	// will happen.
 	function activate() {
 		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::activate()');
 
@@ -19,6 +31,7 @@ class WPRO_Backend_Filesystem {
 		return $log->logreturn(true);
 	}
 
+	// This is the admin form for this backend.
 	function admin_form() {
 		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::admin_form()');
 		?>
@@ -53,7 +66,7 @@ class WPRO_Backend_Filesystem {
 
 	function file_exists($exists, $url) {
 		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::file_exists($exists, $url = "' . $url . '")');
-		$path = rtrim(wpro()->options->get('wpro-fs-path'), '/') . '/' . trim(wpro()->url->relativePath($url), '/');
+		$file = rtrim(wpro()->options->get('wpro-fs-path'), '/') . '/' . trim(wpro()->url->relativePath($url), '/');
 		$log->log('$url = ' . $url);
 		$log->log('$file = ' . $file);
 		return $log->logreturn(file_exists($file));

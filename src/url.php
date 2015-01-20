@@ -10,6 +10,7 @@ class WPRO_Url {
 		add_filter('upload_dir', array($this, 'upload_dir')); // Sets the paths and urls for uploads.
 	}
 
+	// Returns the URL to an attachment. $file can be a URL or a file path.
 	function attachmentUrl($file) {
 		$baseurl = apply_filters('wpro_backend_retrieval_baseurl', '');
 		return rtrim($baseurl, '/') . '/' . ltrim($this->relativePath($file), '/');
@@ -22,6 +23,7 @@ class WPRO_Url {
 		return $path;
 	}
 
+	// Returns the relative part (the ending) of a url or file path.
 	function relativePath($url) {
 		$file = explode('/', $url);
 		$parts = count($file);

@@ -53,6 +53,8 @@ class WPRO_Core {
 
 		// When everything is set up, activate the backend:
 		$this->backends->activate_backend($this->options->get('wpro-service'));
+
+		do_action('wpro_post_setup');
 	}
 
 	/**
