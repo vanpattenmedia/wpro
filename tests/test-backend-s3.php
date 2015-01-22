@@ -11,6 +11,15 @@ class BackendS3Test extends WP_UnitTestCase {
 		*/
 	}
 
+	function testFileExists() {
+		// The S3 backend does not have a filter for file_exists functionality, so it depends on the general WPRO fallback.
+		// This test just makes sure the filter returns null, which means it should do the fallback. However, the fallback is not tested here.
+		wpro()->backends->activate_backend('Amazon S3');
+		$exists = apply_filters('wpro_backend_file_exists', null, 'http://example.org/2015/01/test.png');
+		$this->assertNull($exists);
+		wpro()->backends->deactivate_backend();
+	}
+
 	function testS3Options() {
 		wpro()->backends->activate_backend('Amazon S3');
 		$this->assertTrue(wpro()->options->is_an_option('wpro-aws-key'));

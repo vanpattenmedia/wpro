@@ -73,36 +73,27 @@ class WPRO_Backend_S3 {
 	}
 
 	function store_file($data) {
-		$log = wpro()->debug->logblock('WPRO_Backend_S3::handle_upload()');
+		$log = wpro()->debug->logblock('WPRO_Backend_S3::store_file($data)');
+		$log->log('$data = ' . var_export($data, true));
 
 		$file = $data['file'];
 		$url = $data['url'];
 		$mime = $data['type'];
 
-		wpro()->debug->logblock('WPROS3::upload("' . $file . '", "' . $url . '", "' . $mime . '");');
-
-		//$url = $this->wpro()->url->normalize($url);
-		// Is there a real need for normalizing S3 urls?
-
-
-		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $url, $regs)) return $log->logreturn(false);
-		$url = $regs[3];
-
 		if (!file_exists($file)) return $log->logreturn(false);
-		$this->removeTemporaryLocalData($file);
+
+		$url = wpro()->url->relativePath($url);
 
 		$fin = fopen($file, 'r');
 		if (!$fin) return $log->logreturn(false);
 
-		$fout = fsockopen($this->endpoint, 80, $errno, $errstr, 30);
+		$fout = fsockopen(wpro()->options->get('wpro-aws-endpoint'), 80, $errno, $errstr, 30);
 		if (!$fout) return $log->logreturn(false);
 		$datetime = gmdate('r');
 		$string2sign = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . $url;
 
 		$debug = '';
 		for ($i = 0; $i < strlen($string2sign); $i++) $debug .= dechex(ord(substr($string2sign, $i, 1))) . ' ';
-
-		// Todo: Make this work with php cURL instead of fsockopen/etc..
 
 		$query = "PUT /" . $url . " HTTP/1.1\n";
 		$query .= "Host: " . $this->endpoint . "\n";
@@ -132,7 +123,7 @@ class WPRO_Backend_S3 {
 
 		if (strpos($response, '<Error>') !== false) return $log->logreturn(false);
 
-		return $log->logreturn(true);
+		return $log->logreturn($data);
 	}
 
 	function amazon_hmac($string) {
