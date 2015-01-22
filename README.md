@@ -1,5 +1,7 @@
 # WP Read-Only #
 
+## NOTE: Currently under heavy restructuring. The master/trunk WILL NOT currently work out of the box. ##
+
 * Contributors: alfreddatakillen
 * Tags: wordpress, amazon, s3, readonly
 * Requires at least: 3.3
