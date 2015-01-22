@@ -97,6 +97,25 @@ Something like this:
 	}
 	add_action('wpro_setup_backends', 'add_my_backend');
 
+Please, have a look at src/backend-fs.php for a reference on how to code your
+backend class.
+
+### Actions and filters ###
+
+WPRO executes the following actions and filters:
+
+Actions:
+
+*	`wpro_setup_backend` - Register your backends when this action is invoked.
+*	`wpro_setup_cdn` - Register your CDN when this action is invoded.
+*	`wpro_post_setup` - Invoked after WPRO is fully set up and initialized.
+
+Filters:
+
+*	`wpro_backend_file_exists` - Filter which returns wheather a file exists on your backend.
+*	`wpro_backend_store_file` - Filter which should take care of storing a file on your backend.
+*	`wpro_backend_retrieval_baseurl` - Filter whichs returns the base URL for retrieving files from your backend.
+
 ## Q & A ##
 
 ### Will this plugin work in Wordpress MU/Multisite environments? ###
@@ -138,6 +157,15 @@ thumbs smaller than the cropped image.
 
 This is a WordPress issue, not a WPRO issue.
 
+### My /tmp gets filled up with lots of wpro subdirectories ###
+
+The plugin stores temporary files in those subdirectories. In the end of each
+WordPress request, the plugin will do some clean up, i.e. delete those
+subdirectories. However, if the WordPress process crash due to some error,
+the clean up might not run...
+
+You should check your error logs and fix the bug that crashes WordPress.
+
 ### What about the license? ###
 
 Read more about GPLv2 here:
@@ -151,14 +179,20 @@ me a gluten free beer (or a glass of red wine) in return.
 
 ## Changelog ##
 
-### 1.3 ###
+### current master/trunk alpha/beta/dev ###
 
+*	Major speedup.
 *	Split code into different files and more specific classes.
 *	The plugin is more modular than before. Use WordPress style hooks,
 	actions and registering to add/change functionality.
+*	Themes can register site-specific backends in functions.php.
+	Backends can be bundled as WordPress plugins.
 *	Added a lot of debug logging.
 *	Added some unit testing. More tests needs to be written.
 *	Added backend: Custom filesystem directory.
+*	Don't urlencode() URL:s unnecessarily (like national
+	chars/utf-8/yada yada, you get it...)
+*	Buggfix: Duplicate filename check did not always work. Now it does.
 
 ### 1.2 ###
 
@@ -174,12 +208,6 @@ me a gluten free beer (or a glass of red wine) in return.
 *	In a Multisite/MU environment, the settings are global for all sites,
 	in the Network Admin.
 
-Creds to [Sergio Livi](https://github.com/serl "Sergio Livi")
-and [Keitaroh Kobayashi](https://github.com/keichan34 "Keitaroh Kobayashi")
-for contributing with code! Also, thanks to
-[mavesell](https://github.com/maveseli "mavesell")
-and [nmagee](https://github.com/nmagee "nmagee") for feedback and comments!
-
 ### 1.0 ###
 
 *	The first public release.
@@ -188,30 +216,18 @@ and [nmagee](https://github.com/nmagee "nmagee") for feedback and comments!
 
 Todo list:
 
-*	Have a look at those commits:
-		https://github.com/roryatbrightoak/wpro/commit/f594b7699ec49e1ff8d14f5898b68cdfeeb6e6cf
-		https://github.com/dechuck/wpro/commit/3b9fd6b158963a16c2a9ce541a5af241986776b5#diff-d41d8cd98f00b204e9800998ecf8427e
-		https://github.com/webngay/wpro/commit/72d12f723097716065ebee995a8762a6a3e2770b
-		https://github.com/genu/wpro/commits/master
-		https://github.com/Link7/wpro/commits/master
-		https://github.com/loenex/wpro/commits/master
-		https://github.com/remkade/wpro/commit/5992e052337c4f1cf72585d00f4c44401f69f85a
-		https://github.com/serl/wpro/commit/ef61c4f8b6c59a8847ef500fd607de9bc5cda3e0
-
-*	Add support for FTP:ing uploads to somewhere, as an alternative to
-	Amazon S3.
-*	For WPMU: Store media in a single bucket, but separate them by site, in
-	sub-folders.
+*	Add support for "flat folder structure" for uploads.
+*	Buddypress-avatar upload does not work.
+*	Uploads from the customizer does not work atm...
+*	At unsuccessful upload, an attachment is still created in the wp database. Thats wrong.
+*	Delete media support.
+*	Make sure we are tagging the versions in the git repo properly. Also check out: https://getcomposer.org/doc/articles/aliases.md under "branch alias".
+*	Add FTP backend.
+*	For WPMU: Store media in a single bucket, but separate them by site, in sub-folders.
 *	Only handle `new` medias when activating this plugin on an existing
 	site. Today it's an all-or-nothing approach, and you will have to
 	migrate your media to S3.
 *	Are we supporting all S3 regions?
-*	Check out JSON API support.
-*	Buddypress-avatar upload does not work. Is this related? https://github.com/ramalveyra/wpro/commit/5e74ac0729f020b0f231766e4504c1a2fff4f919
-*	Delete media support.
-*	Testa wordpress importer.
-*	Custom header images does not work. I guess this is unfixable?
-*	Is CURLOPT_FOLLOWLOCATION still a problem? Test it.
-*	Make sure we are tagging the versions in the git repo properly. Also check out: https://getcomposer.org/doc/articles/aliases.md under "branch alias".
-*	At unsuccessful upload, an attachment is still created in the wp database. Thats wrong.
+*	S3 connections should use cURL instead of fsockopen/etc.
+
 
