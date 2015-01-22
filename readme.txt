@@ -228,4 +228,5 @@ Todo list:
 	site. Today it's an all-or-nothing approach, and you will have to
 	migrate your media to S3.
 *	Are we supporting all S3 regions?
+*	S3 connections should use cURL instead of fsockopen/etc.
 
