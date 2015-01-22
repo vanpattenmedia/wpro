@@ -27,6 +27,7 @@ class BackendFSTest extends WP_UnitTestCase {
 	function testUploadHandleFunction() {
 		// Create a 1x1 pixel transparent PNG:
 		$tmpfname = tempnam('/tmp', 'WPROTEST');
+		wpro()->tmpdir->cleanUpDirs[] = $tmpfname;
 		$fh = fopen($tmpfname, 'w');
 		$transparentpng = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=';
 		fwrite($fh, base64_decode($transparentpng));
@@ -35,7 +36,7 @@ class BackendFSTest extends WP_UnitTestCase {
 		$tmpdir = tempnam('/tmp', 'WPROTESTFSPATH');
 		unlink($tmpdir);
 		mkdir($tmpdir);
-		wpro()->tmpdir->cleanUpDirs[] = $tmpdir;
+		//wpro()->tmpdir->cleanUpDirs[] = $tmpdir;
 
 		wpro()->backends->activate_backend('Custom Filesystem Path');
 		wpro()->options->set('wpro-fs-baseurl', 'http://example.org/');
@@ -48,7 +49,7 @@ class BackendFSTest extends WP_UnitTestCase {
 
 		wpro()->backends->deactivate_backend();
 
-		$this->assertEquals(base64_encode(file_get_contents($tmpdir . '/wp-content/uploads/2014/05/test.png')), $transparentpng);
+		$this->assertEquals(base64_encode(file_get_contents($tmpdir . '/2014/05/test.png')), $transparentpng);
 
 	}
 

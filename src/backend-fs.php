@@ -73,7 +73,7 @@ class WPRO_Backend_Filesystem {
 	}
 
 	function store_file($data) {
-		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::handle_upload($data)');
+		$log = wpro()->debug->logblock('WPRO_Backend_Filesystem::store_file($data)');
 
 		$file = $data['file']; // Where the file is right now (like in /tmp)
 		$url = $data['url']; // The URL where it is supposed to be.
@@ -83,12 +83,9 @@ class WPRO_Backend_Filesystem {
 		$log->log('$url = ' . $url);
 		$log->log('$mime = ' . $mime);
 
-		if (!preg_match('/^http(s)?:\/\/([^\/]+)\/(.*)$/', $url, $regs)) return false;
-		$url = $regs[3];
-
 		if (!file_exists($file)) return $log->logreturn(false);
 
-		$path = rtrim(wpro()->options->get('wpro-fs-path'), '/') . '/' . trim($url, '/');
+		$path = rtrim(wpro()->options->get('wpro-fs-path'), '/') . '/' . trim(wpro()->url->relativePath($url), '/');
 
 		if (!is_dir(dirname($path))) mkdir(dirname($path), 0777, true);
 		if (!is_dir(dirname($path))) return $log->logreturn(false);
