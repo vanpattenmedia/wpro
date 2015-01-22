@@ -1,9 +1,8 @@
 {
-    "name": "istrategylabs/wpro",
+    "name": "alfreddatakillen/wpro",
     "description": "Wordpress Read-Only",
     "homepage": "http://github.com/alfreddatakillen/wpro",
     "type": "wordpress-plugin",
-    "minimum-stability": "dev",
     "extra": {
     },
 	"require-dev": {
