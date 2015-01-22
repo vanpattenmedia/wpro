@@ -3,6 +3,7 @@
     "description": "Wordpress Read-Only",
     "homepage": "http://github.com/alfreddatakillen/wpro",
     "type": "wordpress-plugin",
+    "minimum-stability": "dev",
     "extra": {
         "branch-alias": {
             "dev-composer": "1.0.x-dev"
