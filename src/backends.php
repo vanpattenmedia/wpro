@@ -35,7 +35,7 @@ class WPRO_Backends {
 
 	function backend_by_name($name) {
 		$log = wpro()->debug->logblock('WPRO_Backends::backend_by_name()');
-
+		$name = $this->sanitize_backend_name($name);
 		foreach ($this->backends as $key => $val) {
 			if ($key == $name) return $log->logreturn($val);
 		}
@@ -63,6 +63,7 @@ class WPRO_Backends {
 
 	function has_backend($name) {
 		$log = wpro()->debug->logblock('WPRO_Backends::has_backend()');
+		$name = $this->sanitize_backend_name($name);
 		$names = $this->backend_names();
 		return $log->logreturn(in_array($name, $names));
 	}
@@ -77,6 +78,12 @@ class WPRO_Backends {
 		if ($this->has_backend($backend_class_name::NAME)) return $log->logreturn(false);
 		$this->backends[$backend_class_name::NAME] = new $backend_class_name();
 		return $log->logreturn(true);
+	}
+
+	function sanitize_backend_name($name) {
+		// Not really a sanitizer... Rather a backwards compatibility handler. :)
+		if ($name == 's3') $name = 'Amazon S3';
+		return $name;
 	}
 
 }

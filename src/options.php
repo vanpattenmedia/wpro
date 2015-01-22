@@ -27,12 +27,12 @@ class WPRO_Options {
 
 	// The difference between get_option() and get() is that get() will check wheather
 	// the option is a registered setting or not.
-	// get_option() is only supposed to be used for rendering admin forms (which needs
+	// get_option() is only supposed to be used directly when rendering admin forms (which needs
 	// access to all options for all backends).
 	// get() is supposed to be used for everything else.
 
 	function get_option($option, $default = false) {
-		$log = wpro()->debug->logblock('WPRO_Options::get()');
+		$log = wpro()->debug->logblock('WPRO_Options::get_option($option = "' . $option . '", $default)');
 
 		if (!defined('WPRO_ON') || !WPRO_ON) {
 			return $log->logreturn(get_site_option($option, $default));
@@ -45,7 +45,7 @@ class WPRO_Options {
 	}
 
 	function get($option, $default = false) {
-		$log = wpro()->debug->logblock('WPRO_Options::get()');
+		$log = wpro()->debug->logblock('WPRO_Options::get($option = "' . $option . '", $default)');
 		if (!$this->is_an_option($option)) return $log->logreturn(null);
 		return $log->logreturn($this->get_option($option, $default));
 	}
