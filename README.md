@@ -1,7 +1,5 @@
 # WP Read-Only #
 
-## NOTE: Currently under heavy restructuring. The master/trunk WILL NOT currently work out of the box. ##
-
 * Contributors: alfreddatakillen
 * Tags: wordpress, amazon, s3, readonly
 * Requires at least: 3.3
@@ -141,9 +139,18 @@ And, plz, use tabs for indenting! :)
 If you define the constant WPRO_DEBUG in your wp-config.php, then
 some debug data will be written to your PHP error log.
 
-This is how I check me logs (just a tip):
+This is how I check my PHP error logs during WPRO hacking
+(just a tip):
 
 	sudo stdbuf -oL -eL tail -f /var/log/apache2/wpro-error.log | stdbuf -oL -eL sed -r 's/^[^]]+][^]]+][^]]+][^]]+]//' | sed -r 's/, referer: [^ ]+$//'
+
+If you don't want the log messages to the PHP error log, but rather
+to some file, then define WPRO_DEBUG_LOGFILE, setting the filname in the constant,
+and deactivate PHP error logging by setting WPRO_DEBUG_PHPERRORLOG to false:
+
+	define( 'WPRO_DEBUG', true );
+	define( 'WPRO_DEBUG_PHPERRORLOG', false );
+	define( 'WPRO_DEBUG_LOGFILE', '/tmp/wpro_hacking.log' );
 
 There is a Makefile, which will help you to run the unit tests.
 Note: You need [composer](https://getcomposer.org/ "composer") to do the unit testing.
@@ -190,6 +197,7 @@ me a gluten free beer (or a glass of red wine) in return.
 *	Themes can register site-specific backends in functions.php.
 	Backends can be bundled as WordPress plugins.
 *	Added a lot of debug logging.
+*	Can write debug log msgs to a custom log file, or to PHP error log.
 *	Added some unit testing. More tests needs to be written.
 *	Added backend: Custom filesystem directory.
 *	Don't urlencode() URL:s unnecessarily (like national
@@ -218,6 +226,7 @@ me a gluten free beer (or a glass of red wine) in return.
 
 Todo list:
 
+*	At WordPress import, original thumb sizes in attachment postmeta is overwritten, which in some cases leads to an rounding error when the thumb size is re-calculated. That means the size in the filename might be 1 pixel off. Note: this did not happen before the major restructuring of the code...
 *	Add support for "flat folder structure" for uploads.
 *	Buddypress-avatar upload does not work.
 *	Uploads from the customizer does not work atm...
@@ -231,5 +240,7 @@ Todo list:
 	migrate your media to S3.
 *	Are we supporting all S3 regions?
 *	S3 connections should use cURL instead of fsockopen/etc.
+*	log_filename(), php_error_log_enabled() and log_is_enabled() should be variables, to removed function call overhead. Further, those functions needs unit tests.
+*	filters/actions that only exists for logging puropsos should not be added if logging is not enabled.
 
 

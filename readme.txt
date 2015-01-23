@@ -197,6 +197,7 @@ me a gluten free beer (or a glass of red wine) in return.
 *	Themes can register site-specific backends in functions.php.
 	Backends can be bundled as WordPress plugins.
 *	Added a lot of debug logging.
+*	Can write debug log msgs to a custom log file, or to PHP error log.
 *	Added some unit testing. More tests needs to be written.
 *	Added backend: Custom filesystem directory.
 *	Don't urlencode() URL:s unnecessarily (like national
@@ -240,4 +241,5 @@ Todo list:
 *	Are we supporting all S3 regions?
 *	S3 connections should use cURL instead of fsockopen/etc.
 *	log_filename(), php_error_log_enabled() and log_is_enabled() should be variables, to removed function call overhead. Further, those functions needs unit tests.
+*	filters/actions that only exists for logging puropsos should not be added if logging is not enabled.
 
