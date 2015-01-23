@@ -64,7 +64,28 @@ class WPRO_Admin {
 								<tr valign="top">
 									<th scope="row">Each mulitsite blog has it's own subdirectory</th>
 									<td>
-										<input type="checkbox" name="wpro-mu-subdirs" />
+										<input type="checkbox" name="wpro-mu-subdirs" value="1" type="checkbox" <?php
+											if (wpro()->options->get_option('wpro-mu-subdirs')) {
+												echo('checked="checked"');
+											} else {
+												// If there are no s3 settings since before, we should default this checkbox to be
+												// checked. However, if there ARE s3 settings since before, it should default as
+												// unchecked, to preserve backwards compatibility.
+												// (We only need backwards compatibility with versions when we only had a S3
+												// backend, so we just check the s3 options.)
+												if (!wpro()->options->get_option('wpro-aws-key')
+												&& !wpro()->options->get_option('wpro-aws-secret')
+												&& !wpro()->options->get_option('wpro-aws-bucket')
+												&& !wpro()->options->get_option('wpro-aws-cloudfront')
+												&& !wpro()->options->get_option('wpro-aws-virthost')
+												&& !wpro()->options->get_option('wpro-aws-endpoint')
+												&& !wpro()->options->get_option('wpro-aws-ssl')) {
+
+													echo('checked="checked"');
+
+												}
+											}
+										?> />
 										<p class="description">
 											Normally, you want this checked. However, for backwards compatibility reasons, you may want to uncheck this box.
 										</p>
@@ -135,6 +156,15 @@ class WPRO_Admin {
 				if (wpro()->options->is_an_option($key)) {
 					wpro()->options->set($key, $val);
 				}
+			}
+		}
+
+		// Maybe that should be fixed in a more generic way... Until then:
+		if (is_multisite()) {
+			if (!isset($_POST['wpro-mu-subdirs'])) {
+				wpro()->options->set('wpro-mu-subdirs', '');
+			} else {
+				wpro()->options->set('wpro-mu-subdirs', '1');
 			}
 		}
 

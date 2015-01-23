@@ -9,6 +9,9 @@ class WPRO_Options {
 		'wpro-folder',
 		'wpro-tempdir'
 	);
+	private $multisite_option_keys = array(
+		'wpro-mu-subdirs'
+	);
 
 	function __construct() {
 		$log = wpro()->debug->logblock('WPRO_Options::__construct()');
@@ -61,10 +64,19 @@ class WPRO_Options {
 
 	function init() {
 		$log = wpro()->debug->logblock('WPRO_Options::init()');
+
+		// if multisite, add the multisite options to options array:
+		if (is_multisite()) {
+			foreach ($this->multisite_option_keys as $key) {
+				$this->option_keys[] = $key;
+			}
+		}
+
 		// Register all settings:
 		foreach ($this->option_keys as $key) {
 			add_site_option($key, '');
-		};
+		}
+
 		return $log->logreturn(true);
 	}
 
