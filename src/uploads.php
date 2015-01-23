@@ -12,6 +12,7 @@ class WPRO_Uploads {
 		add_filter('wp_handle_upload', array($this, 'handle_upload'));
 		add_filter('wp_generate_attachment_metadata', array($this, 'generate_attachment_metadata')); // We use this filter to store resized versions of the images.
 		add_filter('wp_update_attachment_metadata', array($this, 'update_attachment_metadata')); // We use this filter to store resized versions of the images.
+		add_filter('wp_get_attachment_metadata', array($this, 'get_attachment_metadata'), 10, 2);
 
 		add_filter('load_image_to_edit_path', array($this, 'load_image_to_edit_path'), 10, 3); // This filter downloads the image to our local temporary directory, prior to editing the image.
 		add_filter('load_image_to_edit_filesystempath', array($this, 'load_image_to_edit_filesystempath'), 10, 3);
@@ -199,6 +200,13 @@ class WPRO_Uploads {
 			}
 		}
 
+		return $log->logreturn($data);
+	}
+
+	// Just for logging what is happening:
+	function get_attachment_metadata($data, $id) {
+		$log = wpro()->debug->logblock('WPRO_Uploads::get_attachment_metadata($data, $id)');
+		$log->log('$id = ' . $id);
 		return $log->logreturn($data);
 	}
 
