@@ -216,6 +216,7 @@ me a gluten free beer (or a glass of red wine) in return.
 
 Todo list:
 
+*	At WordPress import, original thumb sizes in attachment postmeta is overwritten, which in some cases leads to an rounding error when the thumb size is re-calculated. That means the size in the filename might be 1 pixel off. Note: this did not happen before the major restructuring of the code...
 *	Add support for "flat folder structure" for uploads.
 *	Buddypress-avatar upload does not work.
 *	Uploads from the customizer does not work atm...
