@@ -139,9 +139,18 @@ And, plz, use tabs for indenting! :)
 If you define the constant WPRO_DEBUG in your wp-config.php, then
 some debug data will be written to your PHP error log.
 
-This is how I check me logs (just a tip):
+This is how I check my PHP error logs during WPRO hacking
+(just a tip):
 
 	sudo stdbuf -oL -eL tail -f /var/log/apache2/wpro-error.log | stdbuf -oL -eL sed -r 's/^[^]]+][^]]+][^]]+][^]]+]//' | sed -r 's/, referer: [^ ]+$//'
+
+If you don't want the log messages to the PHP error log, but rather
+to some file, then define WPRO_DEBUG_LOGFILE, setting the filname in the constant,
+and deactivate PHP error logging by setting WPRO_DEBUG_PHPERRORLOG to false:
+
+	define( 'WPRO_DEBUG', true );
+	define( 'WPRO_DEBUG_PHPERRORLOG', false );
+	define( 'WPRO_DEBUG_LOGFILE', '/tmp/wpro_hacking.log' );
 
 There is a Makefile, which will help you to run the unit tests.
 Note: You need [composer](https://getcomposer.org/ "composer") to do the unit testing.
@@ -230,4 +239,5 @@ Todo list:
 	migrate your media to S3.
 *	Are we supporting all S3 regions?
 *	S3 connections should use cURL instead of fsockopen/etc.
+*	log_filename(), php_error_log_enabled() and log_is_enabled() should be variables, to removed function call overhead. Further, those functions needs unit tests.
 

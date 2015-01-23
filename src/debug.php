@@ -43,11 +43,45 @@ class WPRO_Debug {
 
 		$this->debug_cache[] = trim($msg);
 
-		if (defined('WPRO_DEBUG') && WPRO_DEBUG) {
+		if ($this->log_is_enabled()) {
+			$msg = str_repeat('  ', $this->indentation) . $msg;
 			foreach (explode("\n", $msg) as $msg) {
-				error_log(str_repeat('  ', $this->indentation) . $msg);
+				if ($this->php_error_log_enabled()) {
+					error_log($msg);
+				}
+				$logfile = $this->log_filename();
+				if ($logfile) {
+					file_put_contents($logfile, $msg . "\n", FILE_APPEND);
+				}
 			}
 		}
+	}
+
+	function log_filename() {
+		if (!$this->log_is_enabled()) return false;
+		if (!defined('WPRO_DEBUG_LOGFILE')) return false;
+		if (WPRO_DEBUG_LOGFILE) {
+			if (!file_exists(WPRO_DEBUG_LOGFILE)) {
+				$touched = touch(WPRO_DEBUG_LOGFILE);
+				if ($touched) {
+					chmod(WPRO_DEBUG_LOGFILE, 0666); // 0666, if web browser user and unit test user are not the same.
+					return WPRO_DEBUG_LOGFILE;
+				}
+				return false; // Could not create
+			}
+			return WPRO_DEBUG_LOGFILE;
+		}
+		return false;
+	}
+
+	function php_error_log_enabled() {
+		if (!$this->log_is_enabled()) return false;
+		if (!defined('WPRO_DEBUG_PHPERRORLOG')) return true;
+		return WPRO_DEBUG_PHPERRORLOG;
+	}
+
+	function log_is_enabled() {
+		return defined('WPRO_DEBUG') && WPRO_DEBUG;
 	}
 
 }
