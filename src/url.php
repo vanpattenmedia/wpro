@@ -37,7 +37,7 @@ class WPRO_Url {
 		$backend = wpro()->backends->active_backend;
 		if (is_null($backend)) return $log->logreturn($data);
 
-		$baseurl = apply_filters('wpro_backend_retrieval_baseurl', $data['baseurl']);
+		$baseurl = trim(apply_filters('wpro_backend_retrieval_baseurl', $data['baseurl']), '/');
 
 		return $log->logreturn(array(
 			'path' => wpro()->tmpdir->reqTmpDir() . $data['subdir'],
