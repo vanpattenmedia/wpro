@@ -87,7 +87,7 @@ class WPRO_Backend_S3 {
 					<th scope="row">Use bucket name as virtual hostname</th>
 					<td>
 						<input name="wpro-aws-virthost" id="wpro-aws-virthost" value="1" type="checkbox" <?php if (wpro()->options->get_option('wpro-aws-virthost')) echo('checked="checked"'); ?> />
-						<p class="description">
+						ynp class="description">
 							Check this box if your bucket name is a valid domain name, and the domain is a CNAME alias for Amazon S3.
 						</p>
 					</td>
@@ -143,7 +143,7 @@ class WPRO_Backend_S3 {
 			return $log->logreturn(false);
 		}
 		$datetime = gmdate('r');
-		$string2sign = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . $url;
+		$string2sign = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . '/' . wpro()->options->get('wpro-aws-bucket') . '/' . $url;
 
 		$debug = '';
 		for ($i = 0; $i < strlen($string2sign); $i++) $debug .= dechex(ord(substr($string2sign, $i, 1))) . ' ';
