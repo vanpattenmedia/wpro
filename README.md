@@ -226,7 +226,7 @@ me a gluten free beer (or a glass of red wine) in return.
 
 Todo list:
 
-*	At WordPress import, original thumb sizes in attachment postmeta is overwritten, which in some cases leads to an rounding error when the thumb size is re-calculated. That means the size in the filename might be 1 pixel off. Note: this did not happen before the major restructuring of the code...
+*	At WordPress import, original thumb sizes in attachment postmeta is overwritten, which in some cases leads to an rounding error when the thumb size is re-calculated. That means the size in the filename might be 1 pixel off. Note: this did not happen before the major restructuring of the code, however it could occure because of WP 4.1?...
 *	Add support for "flat folder structure" for uploads.
 *	Buddypress-avatar upload does not work.
 *	Uploads from the customizer does not work atm...
@@ -238,7 +238,6 @@ Todo list:
 *	Only handle `new` medias when activating this plugin on an existing
 	site. Today it's an all-or-nothing approach, and you will have to
 	migrate your media to S3.
-*	Are we supporting all S3 regions?
 *	S3 connections should use cURL instead of fsockopen/etc.
 *	log_filename(), php_error_log_enabled() and log_is_enabled() should be variables, to removed function call overhead. Further, those functions needs unit tests.
 *	filters/actions that only exists for logging puropsos should not be added if logging is not enabled.
