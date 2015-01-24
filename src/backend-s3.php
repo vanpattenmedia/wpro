@@ -80,15 +80,24 @@ class WPRO_Backend_S3 {
 		$url = $data['url'];
 		$mime = $data['type'];
 
-		if (!file_exists($file)) return $log->logreturn(false);
+		if (!file_exists($file)) {
+			$log->log('Error: File does not exist: ' . $file);
+			return $log->logreturn(false);
+		}
 
 		$url = wpro()->url->relativePath($url);
 
 		$fin = fopen($file, 'r');
-		if (!$fin) return $log->logreturn(false);
+		if (!$fin) {
+			$log->log('Error: Can not open ' . $file . ' for reading.');
+			return $log->logreturn(false);
+		}
 
 		$fout = fsockopen(wpro()->options->get('wpro-aws-endpoint'), 80, $errno, $errstr, 30);
-		if (!$fout) return $log->logreturn(false);
+		if (!$fout) {
+			$log->log('Error: Can not open connection to S3 endpoint.');
+			return $log->logreturn(false);
+		}
 		$datetime = gmdate('r');
 		$string2sign = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . $url;
 
@@ -103,6 +112,8 @@ class WPRO_Backend_S3 {
 		$query .= "Content-Length: " . filesize($file) . "\n";
 		$query .= "Date: " . $datetime . "\n";
 		$query .= "Authorization: AWS " . $this->key . ":" . $this->amazon_hmac($string2sign) . "\n\n";
+
+		$log->log('$query = "' . $query . '";');
 
 		fwrite($fout, $query);
 		while (feof($fin) === false) fwrite($fout, fread($fin, 8192));
@@ -121,7 +132,11 @@ class WPRO_Backend_S3 {
 
 		fclose($fout);
 
-		if (strpos($response, '<Error>') !== false) return $log->logreturn(false);
+		$log->log('S3 response: ' . $response);
+
+		if (strpos($response, '<Error>') !== false) {
+			return $log->logreturn(false);
+		}
 
 		return $log->logreturn($data);
 	}
