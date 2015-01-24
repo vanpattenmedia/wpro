@@ -121,15 +121,13 @@ class WPRO_Backend_S3 {
 		$log->log('$data = ' . var_export($data, true));
 
 		$file = $data['file'];
-		$url = $data['url'];
+		$url = wpro()->url->relativePath($data['url']);
 		$mime = $data['type'];
 
 		if (!file_exists($file)) {
 			$log->log('Error: File does not exist: ' . $file);
 			return $log->logreturn(false);
 		}
-
-		$url = wpro()->url->relativePath($url);
 
 		$fin = fopen($file, 'r');
 		if (!$fin) {
@@ -143,10 +141,7 @@ class WPRO_Backend_S3 {
 			return $log->logreturn(false);
 		}
 		$datetime = gmdate('r');
-		$string2sign = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . '/' . wpro()->options->get('wpro-aws-bucket') . '/' . $url;
-
-		$debug = '';
-		for ($i = 0; $i < strlen($string2sign); $i++) $debug .= dechex(ord(substr($string2sign, $i, 1))) . ' ';
+		$string2sign = $this->string_to_sign_at_upload($mime, $datetime, $url);
 
 		$host = wpro()->options->get('wpro-aws-bucket');
 		if (!wpro()->options->get_option('wpro-aws-virthost')) {
@@ -188,6 +183,13 @@ class WPRO_Backend_S3 {
 		}
 
 		return $log->logreturn($data);
+	}
+
+	function string_to_sign_at_upload($mime, $datetime, $url) {
+		$log = wpro()->debug->logblock('WPRO_Backend_S3::string_to_sign_at_upload($mime = "' . $mime . '", $datetime = "' . $datetime . '", $url = "' . $url . '")');
+		$url = wpro()->url->relativePath($url);
+		$string = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . wpro()->options->get('wpro-aws-bucket') . '/' . $url;
+		return $log->logreturn($string);
 	}
 
 	function amazon_hmac($string) {

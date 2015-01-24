@@ -39,5 +39,17 @@ class BackendS3Test extends WP_UnitTestCase {
 		$this->assertFalse(wpro()->options->is_an_option('wpro-aws-ssl'));
 	}
 
+	function testStringToBeSignedAtUploads() {
+		wpro()->backends->activate_backend('Amazon S3');
+		wpro()->options->set('wpro-aws-bucket', 'mytestbucket');
+		$shouldBe = "PUT\n\n";
+		$shouldBe .= "image/jpeg\n";
+		$shouldBe .= "Sat, 24 Jan 2015 14:22:35 +0000\n";
+		$shouldBe .= "x-amz-acl:public-read\n";
+		$shouldBe .= "/mytestbucket/2014/12/HR-77-682x1024.jpg";
+		$this->assertEquals($shouldBe, wpro()->backends->active_backend->string_to_sign_at_upload("image/jpeg", "Sat, 24 Jan 2015 14:22:35 +0000", "http://mytestbucket.s3-eu-west-1.amazonaws.com/2014/12/HR-77-682x1024.jpg"));
+		wpro()->backends->deactivate_backend();
+	}
+
 }
 
