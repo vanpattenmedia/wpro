@@ -212,6 +212,10 @@ class WPRO_Uploads {
 
 	function upload_bits($data) {
 		$log = wpro()->debug->logblock('WPRO_Uploads::upload_bits()');
+		$log->log('$data["name"] = "' . $data['name'] . '";');
+		$log->log('$data["time"] = "' . $data['time'] . '";');
+		$log->log('Data size: ' . strlen($data['bits']));
+
 		if (!wpro()->backends->is_backend_activated()) {
 			$log->log('There is no backend.');
 			$log->logblockend();
@@ -221,8 +225,8 @@ class WPRO_Uploads {
 		$ending = '';
 		if (preg_match('/\.([^\.\/]+)$/', $data['name'], $regs)) $ending = '.' . $regs[1];
 
-		$tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
-		while (file_exists($tmpfile)) $tmpfile = $this->tempdir . 'wpro' . time() . rand(0, 999999) . $ending;
+		$tmpfile = wpro()->tmpdir->reqTmpDir() . '/wpro' . time() . rand(0, 999999) . $ending;
+		while (file_exists($tmpfile)) $tmpfile = wpro()->tmpdir->reqTmpDir() . '/wpro' . time() . rand(0, 999999) . $ending;
 
 		$fh = fopen($tmpfile, 'wb');
 		fwrite($fh, $data['bits']);
