@@ -45,14 +45,15 @@ class WPRO_Debug {
 
 		if ($this->log_is_enabled()) {
 			$msg = str_repeat('  ', $this->indentation) . $msg;
-			foreach (explode("\n", $msg) as $msg) {
-				if ($this->php_error_log_enabled()) {
-					error_log($msg);
+			$msg = implode("\n" . str_repeat('  ', $this->indentation), explode("\n", $msg));
+			if ($this->php_error_log_enabled()) {
+				foreach (explode("\n", $msg) as $row) {
+					error_log($row);
 				}
-				$logfile = $this->log_filename();
-				if ($logfile) {
-					file_put_contents($logfile, $msg . "\n", FILE_APPEND);
-				}
+			}
+			$logfile = $this->log_filename();
+			if ($logfile) {
+				file_put_contents($logfile, $msg . "\n", FILE_APPEND);
 			}
 		}
 	}
