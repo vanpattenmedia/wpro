@@ -148,8 +148,13 @@ class WPRO_Backend_S3 {
 		$debug = '';
 		for ($i = 0; $i < strlen($string2sign); $i++) $debug .= dechex(ord(substr($string2sign, $i, 1))) . ' ';
 
+		$host = wpro()->options->get('wpro-aws-bucket');
+		if (!wpro()->options->get_option('wpro-aws-virthost')) {
+			$host .= '.' . wpro()->options->get('wpro-aws-endpoint');
+		}
+
 		$query = "PUT /" . $url . " HTTP/1.1\n";
-		$query .= "Host: " . wpro()->options->get('wpro-aws-endpoint') . "\n";
+		$query .= "Host: " . $host . "\n";
 		$query .= "x-amz-acl: public-read\n";
 		$query .= "Connection: keep-alive\n";
 		$query .= "Content-Type: " . $mime . "\n";
