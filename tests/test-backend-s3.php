@@ -25,7 +25,7 @@ class BackendS3Test extends WP_UnitTestCase {
 		$this->assertTrue(wpro()->options->is_an_option('wpro-aws-key'));
 		$this->assertTrue(wpro()->options->is_an_option('wpro-aws-secret'));
 		$this->assertTrue(wpro()->options->is_an_option('wpro-aws-bucket'));
-		$this->assertTrue(wpro()->options->is_an_option('wpro-aws-cloudfront'));
+		//$this->assertTrue(wpro()->options->is_an_option('wpro-aws-cloudfront')); // Move feature into CDN functionality.
 		$this->assertTrue(wpro()->options->is_an_option('wpro-aws-virthost'));
 		$this->assertTrue(wpro()->options->is_an_option('wpro-aws-endpoint'));
 		$this->assertTrue(wpro()->options->is_an_option('wpro-aws-ssl'));
@@ -33,7 +33,7 @@ class BackendS3Test extends WP_UnitTestCase {
 		$this->assertFalse(wpro()->options->is_an_option('wpro-aws-key'));
 		$this->assertFalse(wpro()->options->is_an_option('wpro-aws-secret'));
 		$this->assertFalse(wpro()->options->is_an_option('wpro-aws-bucket'));
-		$this->assertFalse(wpro()->options->is_an_option('wpro-aws-cloudfront'));
+		//$this->assertFalse(wpro()->options->is_an_option('wpro-aws-cloudfront')); // Move feature into CDN functionality.
 		$this->assertFalse(wpro()->options->is_an_option('wpro-aws-virthost'));
 		$this->assertFalse(wpro()->options->is_an_option('wpro-aws-endpoint'));
 		$this->assertFalse(wpro()->options->is_an_option('wpro-aws-ssl'));

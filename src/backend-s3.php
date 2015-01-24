@@ -6,13 +6,26 @@ class WPRO_Backend_S3 {
 
 	const NAME = 'Amazon S3';
 
+	private $amazon_s3_endpoints = array(
+		'US Standard (us-east-1)' => 's3.amazonaws.com',
+		'US Standard, North Virginia endpoint (us-east-1)' => 's3-external-1.amazonaws.com',
+		'US West, Oregon (us-west-2)' => 's3-us-west-2.amazonaws.com',
+		'US West, North California (us-west-1)' => 's3-us-west-1.amazonaws.com',
+		'EU, Ireland (eu-west-1)' => 's3-eu-west-1.amazonaws.com',
+		'EU, Frankfurt (eu-central-1)' => 's3-eu-central-1.amazonaws.com',
+		'Asia Pacific, Singapore (ap-southeast-1)' => 's3-ap-southeast-1.amazonaws.com',
+		'Asia Pacific, Sydney (ap-southeast-2)' => 's3-ap-southeast-2.amazonaws.com',
+		'Asia Pacific, Tokyo (ap-northeast-1)' => 's3-ap-northeast-1.amazonaws.com',
+		'South America, Sao Paulo (sa-east-1)' => 's3-sa-east-1.amazonaws.com'
+	);
+
 	function activate() {
 		$log = wpro()->debug->logblock('WPRO_Backend_S3::activate()');
 
 		wpro()->options->register('wpro-aws-key');
 		wpro()->options->register('wpro-aws-secret');
 		wpro()->options->register('wpro-aws-bucket');
-		wpro()->options->register('wpro-aws-cloudfront');
+		//wpro()->options->register('wpro-aws-cloudfront'); Cloudfront support should be as a CDN.
 		wpro()->options->register('wpro-aws-virthost');
 		wpro()->options->register('wpro-aws-endpoint');
 		wpro()->options->register('wpro-aws-ssl');
@@ -42,15 +55,41 @@ class WPRO_Backend_S3 {
 					</td>
 				</tr>
 				<tr valign="top">
+					<th scope="row">Endpoint</th>
+					<td>
+						<select name="wpro-aws-endpoint">
+							<option>-</option>
+							<?php
+								foreach ($this->amazon_s3_endpoints as $endpoint_name => $endpoint_domain) {
+									$selected = '';
+									if ($endpoint_domain == wpro()->options->get_option('wpro-aws-endpoint')) {
+										$selected = 'selected="selected"';
+									}
+									?><option value="<?php echo($endpoint_domain); ?>" <?php echo($selected); ?>><?php echo($endpoint_name); ?></option><?php
+								}
+							?>
+						</select>
+					</td>
+				</tr>
+				<tr valign="top">
+					<th scope="row">Use SSL/HTTPS</th>
+					<td>
+						<input name="wpro-aws-ssl" id="wpro-aws-ssl" value="1" type="checkbox" <?php if (wpro()->options->get_option('wpro-aws-ssl')) echo('checked="checked"'); ?> />
+					</td>
+				</tr>
+				<tr valign="top">
 					<th scope="row">S3 Bucket</th>
 					<td>
 						<input type="text" name="wpro-aws-bucket" value="<?php echo(wpro()->options->get_option('wpro-aws-bucket')); ?>" />
 					</td>
 				</tr>
 				<tr valign="top">
-					<th scope="row">Virtual hosting enabled for the S3 Bucket</th>
+					<th scope="row">Use bucket name as virtual hostname</th>
 					<td>
 						<input name="wpro-aws-virthost" id="wpro-aws-virthost" value="1" type="checkbox" <?php if (wpro()->options->get_option('wpro-aws-virthost')) echo('checked="checked"'); ?> />
+						<p class="description">
+							Check this box if your bucket name is a valid domain name, and the domain is a CNAME alias for Amazon S3.
+						</p>
 					</td>
 				</tr>
 			</table>
@@ -63,6 +102,11 @@ class WPRO_Backend_S3 {
 
 		// The generic admin_post() in admin.php does not handle unchecked checkboxes.
 		// Maybe that should be fixed in a more generic way... Until then:
+		if (!isset($_POST['wpro-aws-ssl'])) {
+			wpro()->options->set('wpro-aws-ssl', '');
+		} else {
+			wpro()->options->set('wpro-aws-ssl', '1');
+		}
 		if (!isset($_POST['wpro-aws-virthost'])) {
 			wpro()->options->set('wpro-aws-virthost', '');
 		} else {
@@ -105,13 +149,13 @@ class WPRO_Backend_S3 {
 		for ($i = 0; $i < strlen($string2sign); $i++) $debug .= dechex(ord(substr($string2sign, $i, 1))) . ' ';
 
 		$query = "PUT /" . $url . " HTTP/1.1\n";
-		$query .= "Host: " . $this->endpoint . "\n";
+		$query .= "Host: " . wpro()->options->get('wpro-aws-endpoint') . "\n";
 		$query .= "x-amz-acl: public-read\n";
 		$query .= "Connection: keep-alive\n";
 		$query .= "Content-Type: " . $mime . "\n";
 		$query .= "Content-Length: " . filesize($file) . "\n";
 		$query .= "Date: " . $datetime . "\n";
-		$query .= "Authorization: AWS " . $this->key . ":" . $this->amazon_hmac($string2sign) . "\n\n";
+		$query .= "Authorization: AWS " . wpro()->options->get_option('wpro-aws-key') . ":" . $this->amazon_hmac($string2sign) . "\n\n";
 
 		$log->log('$query = "' . $query . '";');
 
@@ -145,9 +189,9 @@ class WPRO_Backend_S3 {
 		$log = wpro()->debug->logblock('WPRO_Backend_S3::amazon_hmac()');
 
 		return $log->logreturn(base64_encode(extension_loaded('hash') ?
-		hash_hmac('sha1', $string, $this->secret, true) : pack('H*', sha1(
+		hash_hmac('sha1', $string, wpro()->options->get_option('wpro-aws-secret'), true) : pack('H*', sha1(
 		(str_pad($this->secret, 64, chr(0x00)) ^ (str_repeat(chr(0x5c), 64))) .
-		pack('H*', sha1((str_pad($this->secret, 64, chr(0x00)) ^
+		pack('H*', sha1((str_pad(wpro()->options->get_option('wpro-aws-secret'), 64, chr(0x00)) ^
 		(str_repeat(chr(0x36), 64))) . $string))))));
 	}
 
@@ -158,7 +202,7 @@ class WPRO_Backend_S3 {
 		wpro()->options->deregister('wpro-aws-key');
 		wpro()->options->deregister('wpro-aws-secret');
 		wpro()->options->deregister('wpro-aws-bucket');
-		wpro()->options->deregister('wpro-aws-cloudfront');
+		//wpro()->options->deregister('wpro-aws-cloudfront');
 		wpro()->options->deregister('wpro-aws-virthost');
 		wpro()->options->deregister('wpro-aws-endpoint');
 		wpro()->options->deregister('wpro-aws-ssl');
@@ -191,7 +235,6 @@ class WPRO_Backend_S3 {
 
 		return $log->logreturn($url);
 	}
-		
 
 }
 
