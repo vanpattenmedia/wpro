@@ -166,8 +166,7 @@ class WPRO_Backend_S3 {
 		// Get the amazon response:
 		$response = '';
 		while (!feof($fout)) {
-			$data = fgets($fout, 256);
-			$response .= $data;
+			$response .= fgets($fout, 256);
 			if (strpos($response, "\r\n\r\n") !== false) { // Header fully returned.
 				if (strpos($response, 'Content-Length: 0') !== false) break; // Return if Content-Length: 0 (and header is fully returned)
 				if (substr($response, -7) == "\r\n0\r\n\r\n") break; // Keep-alive responses does not return EOF, they end with this string.
