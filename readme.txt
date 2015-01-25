@@ -191,18 +191,19 @@ me a gluten free beer (or a glass of red wine) in return.
 = current master/trunk alpha/beta/dev =
 
 *	Major speedup.
-*	Split code into different files and more specific classes.
-*	The plugin is more modular than before. Use WordPress style hooks,
-	actions and registering to add/change functionality.
+*	Unit testing.
+*	Added backend: Custom filesystem directory.
 *	Themes can register site-specific backends in functions.php.
 	Backends can be bundled as WordPress plugins.
+*	WP-Cli support for setting/getting WPRO options.
+*	The plugin is more modular than before. Use WordPress style hooks,
+	actions and registering to add/change functionality.
 *	Added a lot of debug logging.
 *	Can write debug log msgs to a custom log file, or to PHP error log.
-*	Added some unit testing. More tests needs to be written.
-*	Added backend: Custom filesystem directory.
+*	Split code into different files and more specific classes.
 *	Don't urlencode() URL:s unnecessarily (like national
 	chars/utf-8/yada yada, you get it...)
-*	Buggfix: Duplicate filename check did not always work. Now it does.
+*	Bug fix: Duplicate filename check did not always work. Now it does.
 
 = 1.2 =
 
