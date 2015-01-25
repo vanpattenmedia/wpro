@@ -9,8 +9,34 @@ class WPRO_Debug {
 	var $debug_cache;
 	var $indentation;
 
+	private $log_is_enabled = false;
+	private $php_error_log_enabled = true;
+	private $log_filename = false;
+
 	function __construct() {
 		$this->clean_debug_cache();
+
+		$this->log_is_enabled = defined('WPRO_DEBUG') && WPRO_DEBUG;
+
+		if ($this->log_is_enabled) {
+
+			if (defined('WPRO_DEBUG_PHPERRORLOG')) {
+				$this->php_error_log_enabled = PRO_DEBUG_PHPERRORLOG;
+			}
+
+			if (defined('WPRO_DEBUG_LOGFILE') && WPRO_DEBUG_LOGFILE) {
+				if (!file_exists(WPRO_DEBUG_LOGFILE)) {
+					$touched = touch(WPRO_DEBUG_LOGFILE);
+					if ($touched) {
+						chmod(WPRO_DEBUG_LOGFILE, 0666); // 0666, if web browser user and unit test user are not the same.
+						$this->log_filename = WPRO_DEBUG_LOGFILE;
+					}
+				} else {
+					$this->log_filename = WPRO_DEBUG_LOGFILE;
+				}
+			}
+		}
+
 	}
 
 	function clean_debug_cache() {
@@ -43,46 +69,18 @@ class WPRO_Debug {
 
 		$this->debug_cache[] = trim($msg);
 
-		if ($this->log_is_enabled()) {
+		if ($this->log_is_enabled) {
 			$msg = str_repeat('  ', $this->indentation) . $msg;
 			$msg = implode("\n" . str_repeat('  ', $this->indentation), explode("\n", $msg));
-			if ($this->php_error_log_enabled()) {
+			if ($this->php_error_log_enabled) {
 				foreach (explode("\n", $msg) as $row) {
 					error_log($row);
 				}
 			}
-			$logfile = $this->log_filename();
-			if ($logfile) {
-				file_put_contents($logfile, $msg . "\n", FILE_APPEND);
+			if ($this->log_filename) {
+				file_put_contents($this->log_filename, $msg . "\n", FILE_APPEND);
 			}
 		}
-	}
-
-	function log_filename() {
-		if (!$this->log_is_enabled()) return false;
-		if (!defined('WPRO_DEBUG_LOGFILE')) return false;
-		if (WPRO_DEBUG_LOGFILE) {
-			if (!file_exists(WPRO_DEBUG_LOGFILE)) {
-				$touched = touch(WPRO_DEBUG_LOGFILE);
-				if ($touched) {
-					chmod(WPRO_DEBUG_LOGFILE, 0666); // 0666, if web browser user and unit test user are not the same.
-					return WPRO_DEBUG_LOGFILE;
-				}
-				return false; // Could not create
-			}
-			return WPRO_DEBUG_LOGFILE;
-		}
-		return false;
-	}
-
-	function php_error_log_enabled() {
-		if (!$this->log_is_enabled()) return false;
-		if (!defined('WPRO_DEBUG_PHPERRORLOG')) return true;
-		return WPRO_DEBUG_PHPERRORLOG;
-	}
-
-	function log_is_enabled() {
-		return defined('WPRO_DEBUG') && WPRO_DEBUG;
 	}
 
 }

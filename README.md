@@ -238,8 +238,6 @@ Todo list:
 *	Only handle `new` medias when activating this plugin on an existing
 	site. Today it's an all-or-nothing approach, and you will have to
 	migrate your media to S3.
-*	S3 connections should use cURL instead of fsockopen/etc.
-*	log_filename(), php_error_log_enabled() and log_is_enabled() should be variables, to removed function call overhead. Further, those functions needs unit tests.
 *	filters/actions that only exists for logging puropsos should not be added if logging is not enabled.
 
 
