@@ -19,8 +19,24 @@ class WPRO_Core {
 	// TODO: Tests to write: There must not be a __construct here. Since we are calling wpro() from the __constructs of objects created by WPRO_Core, we will end up in a loop creating multiple instances of WPRO_Core.
 
 	function construct_singleton() { // Instead of __construct().
-		foreach (glob(plugin_dir_path(__FILE__) . "src/*.php" ) as $file) {
-			require_once($file);
+
+		require_once(dirname(__FILE__) . '/src/admin.php');
+		require_once(dirname(__FILE__) . '/src/backend-fs.php');
+		require_once(dirname(__FILE__) . '/src/backend-s3.php');
+		require_once(dirname(__FILE__) . '/src/backends.php');
+		require_once(dirname(__FILE__) . '/src/cdn.php');
+		require_once(dirname(__FILE__) . '/src/curlexecfollows.php');
+		require_once(dirname(__FILE__) . '/src/debug.php');
+		require_once(dirname(__FILE__) . '/src/edit.php');
+		require_once(dirname(__FILE__) . '/src/gravityforms.php');
+		require_once(dirname(__FILE__) . '/src/http.php');
+		require_once(dirname(__FILE__) . '/src/options.php');
+		require_once(dirname(__FILE__) . '/src/tmpdir.php');
+		require_once(dirname(__FILE__) . '/src/uploads.php');
+		require_once(dirname(__FILE__) . '/src/url.php');
+
+		if ( defined('WP_CLI') && WP_CLI ) {
+			require_once( dirname( __FILE__ ) . '/src/wpcli.php' );
 		}
 
 		$this->debug = new WPRO_Debug();
@@ -89,6 +105,7 @@ class WPRO_Core {
 	}
 
 }
+
 
 /**
  * Allow direct access to WPRO classes
