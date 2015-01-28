@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) exit();
 class WPRO_TmpDir {
 
 	private $reqTmpDirCache = '.';
-	public $cleanUpDirs = []; // Temporary directories to remove at shutdown.
+	public $cleanUpDirs = array(); // Temporary directories to remove at shutdown.
 
 	function __construct() {
 		$log = wpro()->debug->logblock('WPRO_TmpDir::__construct()');
