@@ -21,7 +21,7 @@ class WPRO_Debug {
 		if ($this->log_is_enabled) {
 
 			if (defined('WPRO_DEBUG_PHPERRORLOG')) {
-				$this->php_error_log_enabled = PRO_DEBUG_PHPERRORLOG;
+				$this->php_error_log_enabled = WPRO_DEBUG_PHPERRORLOG;
 			}
 
 			if (defined('WPRO_DEBUG_LOGFILE') && WPRO_DEBUG_LOGFILE) {

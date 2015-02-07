@@ -87,7 +87,7 @@ class WPRO_Backend_S3 {
 					<th scope="row">Use bucket name as virtual hostname</th>
 					<td>
 						<input name="wpro-aws-virthost" id="wpro-aws-virthost" value="1" type="checkbox" <?php if (wpro()->options->get_option('wpro-aws-virthost')) echo('checked="checked"'); ?> />
-						ynp class="description">
+						<p class="description">
 							Check this box if your bucket name is a valid domain name, and the domain is a CNAME alias for Amazon S3.
 						</p>
 					</td>
