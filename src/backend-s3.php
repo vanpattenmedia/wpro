@@ -228,7 +228,7 @@ class WPRO_Backend_S3 {
 		}
 
 		if (wpro()->options->get_option('wpro-aws-virthost')) {
-			$url = $protocol . '://' . wpro()->options->get('wpro-aws-bucket') . '/';
+			$url = $protocol . '://' . wpro()->options->get('wpro-aws-virthost') . '/';
 		} else {
 			$url = $protocol . '://' . wpro()->options->get('wpro-aws-bucket') . '.' . wpro()->options->get('wpro-aws-endpoint') . '/';
 		}
