@@ -148,7 +148,7 @@ class WPRO_Backend_S3 {
 			$host .= '.' . wpro()->options->get('wpro-aws-endpoint');
 		}
 
-		$query = "PUT /" . $url . " HTTP/1.1\n";
+		$query = "PUT /" . WP_SITE . "/" . $url . " HTTP/1.1\n";
 		$query .= "Host: " . $host . "\n";
 		$query .= "x-amz-acl: public-read\n";
 		$query .= "Connection: keep-alive\n";
@@ -185,9 +185,9 @@ class WPRO_Backend_S3 {
 	}
 
 	function string_to_sign_at_upload($mime, $datetime, $url) {
-		$log = wpro()->debug->logblock('WPRO_Backend_S3::string_to_sign_at_upload($mime = "' . $mime . '", $datetime = "' . $datetime . '", $url = "' . $url . '")');
+		$log = wpro()->debug->logblock('WPRO_Backend_S3::string_to_sign_at_upload($mime = "' . $mime . '", $datetime = "' . $datetime . '", $url = "' . WP_SITE . '/' . $url . '")');
 		$url = wpro()->url->relativePath($url);
-		$string = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . wpro()->options->get('wpro-aws-bucket') . '/' . $url;
+		$string = "PUT\n\n" . $mime . "\n" . $datetime . "\nx-amz-acl:public-read\n/" . wpro()->options->get('wpro-aws-bucket') . '/' . WP_SITE . '/' . $url;
 		return $log->logreturn($string);
 	}
 
