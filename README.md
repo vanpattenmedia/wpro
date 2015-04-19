@@ -67,8 +67,8 @@ Those are the constants
 	S3 bucket where your files should be stored.
 *	`define('WPRO_AWS_VIRTHOST', 'files.example.org');` - If you have
 	a virthost for your Amazon S3 bucket, it should be there.
-*   `define('WPRO_AWS_SSL', true);` - Use SSL to serve the file. (Off
-    by default)
+*	`define('WPRO_AWS_SSL', true);` - Use SSL to serve the file. (Off
+	by default)
 *	`define('WPRO_AWS_ENDPOINT', 's3-eu-west-1.amazonaws.com');` - The
 	Amazon endpoint datacenter where your S3 bucket is. See list of
 	endpoints below.
