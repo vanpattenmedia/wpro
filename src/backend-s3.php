@@ -228,7 +228,7 @@ class WPRO_Backend_S3 {
 			$url = trailingslashit( 'http://' . wpro()->options->get('wpro-aws-bucket') . '.' . wpro()->options->get('wpro-aws-endpoint') );
 		}
 
-		if (strlen($folder = untrailingslashit(wpro()->options->get_option('wpro-folder'))) {
+		if (strlen($folder = untrailingslashit(wpro()->options->get_option('wpro-folder')))) {
 			$url .= $folder;
 		}
 
