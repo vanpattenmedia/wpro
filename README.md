@@ -55,20 +55,22 @@ admin.
 
 Those are the constants
 
-*	define('WPRO_ON', true); // Enables the plugin and use
+*	`define('WPRO_ON', true);` - Enables the plugin and use
 	configuration from contants.
-*	define('WPRO_SERVICE', 's3'); // Amazon S3 is the service.
-*	define('WPRO_FOLDER', 'some/path/here'); // Prepend all URI paths
+*	`define('WPRO_SERVICE', 's3');` - Amazon S3 is the service.
+*	`define('WPRO_FOLDER', 'some/path/here');` - Prepend all URI paths
 	at S3 with this folder. In most cases, you probably want this
 	to be empty.
-*	define('WPRO_AWS_KEY', 'your aws key');
-*	define('WPRO_AWS_SECRET', 'your aws secret');
-*	define('WPRO_AWS_BUCKET', 'MyBucket'); // The name of the Amazon
+*	`define('WPRO_AWS_KEY', 'your aws key');`
+*	`define('WPRO_AWS_SECRET', 'your aws secret');`
+*	`define('WPRO_AWS_BUCKET', 'MyBucket');` - The name of the Amazon
 	S3 bucket where your files should be stored.
-*	define('WPRO_AWS_VIRTHOST', 'files.example.org'); // If you have
+*	`define('WPRO_AWS_VIRTHOST', 'files.example.org');` - If you have
 	a virthost for your Amazon S3 bucket, it should be there.
-*	define('WPRO_AWS_ENDPOINT', 's3-eu-west-1.amazonaws.com'); // The
-	Amazon endpoint datacenter where your S3 bucket is. Se list of
+*   `define('WPRO_AWS_SSL', true);` - Use SSL to serve the file. (Off
+    by default)
+*	`define('WPRO_AWS_ENDPOINT', 's3-eu-west-1.amazonaws.com'); // The
+	Amazon endpoint datacenter where your S3 bucket is. See list of
 	endpoints below.
 
 Those are the AWS endpoints:
