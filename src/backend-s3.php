@@ -222,19 +222,18 @@ class WPRO_Backend_S3 {
 	function url($value) {
 		$log = wpro()->debug->logblock('WPRO_Backend_S3::url()');
 
-		$protocol = 'http';
-		if (wpro()->options->get('wpro-aws-ssl')) {
-			$protocol = 'https';
-		}
-
 		if (wpro()->options->get_option('wpro-aws-virthost')) {
-			$url = $protocol . '://' . wpro()->options->get('wpro-aws-virthost') . '/';
+			$url = trailingslashit( 'http://' . wpro()->options->get('wpro-aws-virthost') );
 		} else {
-			$url = $protocol . '://' . wpro()->options->get('wpro-aws-bucket') . '.' . wpro()->options->get('wpro-aws-endpoint') . '/';
+			$url = trailingslashit( 'http://' . wpro()->options->get('wpro-aws-bucket') . '.' . wpro()->options->get('wpro-aws-endpoint') );
 		}
 
-		if (strlen($folder = trim(wpro()->options->get_option('wpro-folder'), '/'))) {
+		if (strlen($folder = untrailingslashit(wpro()->options->get_option('wpro-folder'))) {
 			$url .= $folder;
+		}
+
+		if (wpro()->options->get('wpro-aws-ssl')) {
+			$url = set_url_scheme( $url, 'https' );
 		}
 
 		return $log->logreturn($url);
